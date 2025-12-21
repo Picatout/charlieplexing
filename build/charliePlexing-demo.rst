@@ -895,7 +895,7 @@ Hexadecimal [24-Bits]
                                       7 ;;--------------------------------------
                                       8     .area HOME 
                                       9 
-      008000 82 00 80 CC             10 	int cold_start	        ; reset
+      008000 82 00 80 CB             10 	int cold_start	        ; reset
       008004 82 00 80 80             11 	int NonHandledInterrupt	; trap
       008008 82 00 00 00             12 	int 0               	; irq0 not used 
       00800C 82 00 80 80             13 	int NonHandledInterrupt	; irq1 FLASH  
@@ -1076,35 +1076,35 @@ Hexadecimal [24-Bits]
       0080CA 81               [ 4]  127 	ret 
                                     128 
                                     129 
-      0080CB                        130 beep:
-                                    131 
-      0080CB 81               [ 4]  132     ret 
-                                    133     
-                                    134 ;-------------------------------------
-                                    135 ;  initialization entry point 
-                                    136 ;-------------------------------------
-      0080CC                        137 cold_start:
-                                    138 ;set stack 
-      0080CC AE 05 FF         [ 2]  139 	ldw x,#STACK_EMPTY
-      0080CF 94               [ 1]  140 	ldw sp,x
-                                    141 ; clear all ram 
-      0080D0 7F               [ 1]  142 0$: clr (x)
-      0080D1 5A               [ 2]  143 	decw x 
-      0080D2 26 FC            [ 1]  144 	jrne 0$
-      0080D4 CD 80 A0         [ 4]  145     call clock_init 
-                                    146 ;----------------------
-                                    147 ; SWIM DELAY  
-                                    148 ;----------------------
-      0080D7 A6 00            [ 1]  149     ld a,#0
-      0080D9 AE FF FF         [ 2]  150 1$: ldw x,#0xffff 
-      0080DC 5A               [ 2]  151 2$: decw x 
-      0080DD 26 FD            [ 1]  152     jrne 2$ 
-      0080DF 4A               [ 1]  153     dec a 
-      0080E0 26 F7            [ 1]  154     jrne 1$ 
-                                    155 ;----------------------    
-      0080E2 CD 80 A5         [ 4]  156 	call timer4_init ; msec ticks timer 
-                                    157 ;	rim ; enable interrupts
-      0080E5 CC 80 E8         [ 2]  158 	jp demo 
+                                    130 
+                                    131 ;-------------------------------------
+                                    132 ;  initialization entry point 
+                                    133 ;-------------------------------------
+      0080CB                        134 cold_start:
+                                    135 ;set stack 
+      0080CB AE 05 FF         [ 2]  136 	ldw x,#STACK_EMPTY
+      0080CE 94               [ 1]  137 	ldw sp,x
+                                    138 ; clear all ram 
+      0080CF 7F               [ 1]  139 0$: clr (x)
+      0080D0 5A               [ 2]  140 	decw x 
+      0080D1 26 FC            [ 1]  141 	jrne 0$
+      0080D3 CD 80 A0         [ 4]  142     call clock_init 
+                                    143 ;----------------------
+                                    144 ; SWIM DELAY  
+                                    145 ;----------------------
+      0080D6 A6 00            [ 1]  146     ld a,#0
+      0080D8 AE FF FF         [ 2]  147 1$: ldw x,#0xffff 
+      0080DB 5A               [ 2]  148 2$: decw x 
+      0080DC 26 FD            [ 1]  149     jrne 2$ 
+      0080DE 4A               [ 1]  150     dec a 
+      0080DF 26 F7            [ 1]  151     jrne 1$ 
+                                    152 ;----------------------    
+      0080E1 CD 80 A5         [ 4]  153 	call timer4_init ; msec ticks timer 
+                                    154 ;	rim ; enable interrupts
+      0080E4 CC 80 E7         [ 2]  155 	jp demo 
+                                    156 
+                                    157 
+                                    158 
                                     159 
                                     160 
                                     161 
@@ -1113,28 +1113,60 @@ Hexadecimal [24-Bits]
 
 
 
-                                    162 
-                                    163 
-                                    164 
+                                     27 
+                                     28 
+                                     29 
+                                     30 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 23.
 Hexadecimal [24-Bits]
 
 
 
-                                     27 
-                                     28 
-                                     29 
-                                     30 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 24.
-Hexadecimal [24-Bits]
-
-
-
                                       8  
-      0080E8                          9 demo:
-                                     10 
-      0080E8 81               [ 4]   11     ret 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 25.
+      0080E7                          9 demo:
+                                     10 ; set pins 5,6 as output push pull 
+                                     11 ; PB5,PB6
+      0080E7 A6 60            [ 1]   12     ld a, #(1<<5)|(1<<6)
+      0080E9 C7 50 07         [ 1]   13     ld PB+GPIO_DDR,a  ; output mode 
+      0080EC C7 50 08         [ 1]   14     ld PB+GPIO_CR1,a  ; push pull output 
+                                     15 ; set pin 1,2 as output push pull
+                                     16 ; PA0,PA2 
+                                     17 ; PA0 used as common for the 3 LEDs 
+      0080EF A6 05            [ 1]   18     ld a,#(1<<0)|(1<<2)
+      0080F1 C7 50 02         [ 1]   19     ld PA+GPIO_DDR,a ; output mode      
+      0080F4 C7 50 03         [ 1]   20     ld PA+GPIO_CR1,a ; push pull output 
+      0080F7 72 10 50 00      [ 1]   21     bset PA+GPIO_ODR,#0 ; output high 
+      0080FB AD 20            [ 4]   22     callr leds_off ; 3 LEDs off
+                                     23 
+      0080FD                         24 1$: ; cycle 3 LEDs 
+      0080FD 72 15 50 00      [ 1]   25     bres PA+GPIO_ODR,#2 ; PA2 low LED1 on 
+      008101 AD 27            [ 4]   26     callr delay 
+      008103 72 14 50 00      [ 1]   27     bset PA+GPIO_ODR,#2 ; PA2 high, LED1 off 
+      008107 72 1D 50 05      [ 1]   28     bres PB+GPIO_ODR,#6  ; PB6 low , LED2 on 
+      00810B AD 1D            [ 4]   29     callr delay 
+      00810D 72 1C 50 05      [ 1]   30     bset PB+GPIO_ODR,#6 ; PB6 high, LED2 off 
+      008111 72 1B 50 05      [ 1]   31     bres PB+GPIO_ODR,#5 ; PB5 low , LED3 on 
+      008115 AD 13            [ 4]   32     callr delay 
+      008117 CD 81 1D         [ 4]   33     call leds_off  
+      00811A 20 E1            [ 2]   34     jra 1$ 
+      00811C 81               [ 4]   35     ret 
+                                     36 
+      00811D                         37 leds_off: 
+      00811D 72 14 50 00      [ 1]   38     bset PA+GPIO_ODR,#2 ; output low  
+      008121 72 1A 50 05      [ 1]   39     bset PB+GPIO_ODR,#5 ; output low 
+      008125 72 1C 50 05      [ 1]   40     bset PB+GPIO_ODR,#6 ; output low 
+      008129 81               [ 4]   41     ret 
+                                     42 
+      00812A                         43 delay:
+      00812A A6 0F            [ 1]   44     ld a,#15
+      00812C 5F               [ 1]   45     clrw x 
+      00812D                         46 1$: 
+      00812D 5A               [ 2]   47     decw x 
+      00812E 26 FD            [ 1]   48     jrne 1$ 
+      008130 4A               [ 1]   49     dec a 
+      008131 26 FA            [ 1]   50     jrne 1$
+      008133 81               [ 4]   51     ret 
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 24.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1194,7 +1226,7 @@ Symbol Table
     I2C_SR1_=  000007     |     I2C_SR2 =  005218     |     I2C_SR2_=  000002 
     I2C_SR2_=  000001     |     I2C_SR2_=  000000     |     I2C_SR2_=  000003 
     I2C_SR2_=  000005     |     I2C_SR3 =  005219     |     I2C_SR3_=  000001 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 26.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 25.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1254,7 +1286,7 @@ Symbol Table
     TIM2_SR1=  005255     |     TIM2_SR2=  005256     |     TIM3_ARR=  00528E 
     TIM3_ARR=  00528F     |     TIM3_BKR=  005294     |     TIM3_CCE=  00528A 
     TIM3_CCM=  005288     |     TIM3_CCM=  005289     |     TIM3_CCR=  005290 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 27.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 26.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1310,19 +1342,19 @@ Symbol Table
     USART_SR=  000000     |     USART_SR=  000005     |     USART_SR=  000006 
     USART_SR=  000007     |     WFE_CR1 =  0050A6     |     WFE_CR2 =  0050A7 
     WWDG_CR =  0050D3     |     WWDG_WR =  0050D4     |   5 acc16      00000B GR
-  5 acc8       00000C GR  |   7 beep       00004B R   |   7 clock_in   000020 R
-  7 cold_sta   00004C R   |   5 delay_ti   00000A R   |   7 demo       000068 R
+  5 acc8       00000C GR  |   7 clock_in   000020 R   |   7 cold_sta   00004B R
+  7 delay      0000AA R   |   5 delay_ti   00000A R   |   7 demo       000067 R
   5 flags      00000F GR  |   6 free_ram   000100 R   |   3 free_ram   00057E R
-  7 pause      00003E R   |   5 ptr16      00000D GR  |   5 ptr8       00000E R
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
+  7 leds_off   00009D R   |   7 pause      00003E R   |   5 ptr16      00000D GR
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 27.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
-  3 stack_fu   00057E R   |   3 stack_un   0005FE R   |   5 ticks      000008 R
-  7 timer4_i   000025 R
+  5 ptr8       00000E R   |   3 stack_fu   00057E R   |   3 stack_un   0005FE R
+  5 ticks      000008 R   |   7 timer4_i   000025 R
 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 29.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
 Hexadecimal [24-Bits]
 
 Area Table
@@ -1334,5 +1366,5 @@ Area Table
    4 DATA       size      0   flags    8
    5 DATA1      size      8   flags    8
    6 DATA2      size      0   flags    8
-   7 CODE       size     69   flags    0
+   7 CODE       size     B4   flags    0
 
