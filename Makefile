@@ -1,7 +1,7 @@
 #############################
 # metronome 
 #############################
-NAME=metronome
+NAME=charliePlexing-demo
 SDAS=sdasstm8
 SDCC=sdcc
 SDAR=sdar
@@ -10,6 +10,7 @@ CFLAGS=-mstm8 -lstm8 -L$(LIB_PATH) -I../../inc
 INC=../../inc/
 INCLUDES=config.inc 
 MAIN_DIR=../../
+BUILD_DIR=build/
 SRC=$(NAME).asm
 OBJECT=$(BUILD_DIR)$(NAME).rel
 OBJECTS=$(BUILD_DIR)$(SRC:.asm=.rel)

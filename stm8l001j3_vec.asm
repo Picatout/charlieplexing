@@ -38,5 +38,5 @@
 	int NonHandledInterrupt	; irq26 SPI1 
 	int NonHandledInterrupt	; irq27 USART TX 
 	int NonHandledInterrupt	; irq28 USART1 RX 
-	int I2cIntHandler  	    ; irq29 I2C1 
+	int NonHandledInterrupt	; irq29 I2C1 
  

@@ -1,19 +1,19 @@
 ;;
 ; Copyright Jacques Deschênes 2025  
-; This file is part of metronome.asm  
+; This file is part of CharliePlexing-demo.asm  
 ;
-;     metronome.asm is free software: you can redistribute it and/or modify
+;     CharliePlexing-demo.asm is free software: you can redistribute it and/or modify
 ;     it under the terms of the GNU General Public License as published by
 ;     the Free Software Foundation, either version 3 of the License, or
 ;     (at your option) any later version.
 ;
-;     metronome.asm is distributed in the hope that it will be useful,
+;     CharliePlexing-demo.asm is distributed in the hope that it will be useful,
 ;     but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;     GNU General Public License for more details.
 ;
 ;     You should have received a copy of the GNU General Public License
-;     along with metronome.asm.  If not, see <http://www.gnu.org/licenses/>.
+;     along with CharliePlexing-demo.asm.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -44,31 +44,13 @@ stack_unf: ; stack underflow ; control_stack bottom
 
 ticks: .blkw 1 ; 1.664 milliseconds ticks counter (see Timer4UpdateHandler)
 delay_timer: .blkb 1 ; 60 hertz timer   
-bpm: .blkw 1  ; beats per minute 
 acc16:: .blkb 1 ; 16 bits accumulator, acc24 high-byte
 acc8::  .blkb 1 ;  8 bits accumulator, acc24 low-byte  
 ptr16::  .blkb 1 ; 16 bits pointer , farptr high-byte 
 ptr8:   .blkb 1 ; 8 bits pointer, farptr low-byte  
 flags:: .blkb 1 ; various boolean flags
-; i2c peripheral 
-i2c_buf: .blkw 1 ; i2c buffer address 
-i2c_count: .blkw 1 ; bytes to transmit 
-i2c_idx: .blkw 1 ; index in buffer
-i2c_status: .blkb 1 ; error status 
-i2c_devid: .blkb 1 ; device identifier  
-;; OLED display 
-line: .blkb 1 ; text line cursor position 
-col: .blkb 1 ;  text column cursor position
-cpl: .blkb 1 ; characters per line 
-disp_lines: .blkb 1 ; text lines per display  
-font_width: .blkb 1 ; character width in pixels 
-font_height: .blkb 1 ; character height in pixels 
-to_send: .blkb 1 ; bytes to send per character 
-disp_flags: .blkb 1 ; boolean flags 
 
 	.org 0x100
-co_code: .blkb 1	
-disp_buffer: .ds DISPLAY_BUFFER_SIZE ; oled display page buffer 
 
 free_ram: ; from here RAM free up to free_ram_end 
 
@@ -172,10 +154,9 @@ cold_start:
     jrne 1$ 
 ;----------------------    
 	call timer4_init ; msec ticks timer 
-	ld a,#I2C_FAST   
-	call i2c_init 
-	rim ; enable interrupts
-	jp metronome
+;	rim ; enable interrupts
+	jp demo 
+
 
 
 
