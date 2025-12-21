@@ -1,6 +1,11 @@
 #############################
-# metronome 
+# CharliePlexing demo 
 #############################
+MCU=stm8l001j3
+PROGRAMMER=stlinkv2
+FLASH_SIZE=8192
+BOARD_INC=inc/stm8l001j3.inc 
+BUILD_DIR=build/
 NAME=charliePlexing-demo
 SDAS=sdasstm8
 SDCC=sdcc
@@ -9,8 +14,6 @@ OBJCPY=objcpy
 CFLAGS=-mstm8 -lstm8 -L$(LIB_PATH) -I../../inc
 INC=../../inc/
 INCLUDES=config.inc 
-MAIN_DIR=../../
-BUILD_DIR=build/
 SRC=$(NAME).asm
 OBJECT=$(BUILD_DIR)$(NAME).rel
 OBJECTS=$(BUILD_DIR)$(SRC:.asm=.rel)
