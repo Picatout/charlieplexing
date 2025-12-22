@@ -1123,50 +1123,121 @@ Hexadecimal [24-Bits]
 
 
                                       8  
-      000067                          9 demo:
-                                     10 ; set pins 5,6 as output push pull 
-                                     11 ; PB5,PB6
-      000067 A6 60            [ 1]   12     ld a, #(1<<5)|(1<<6)
-      000069 C7 50 07         [ 1]   13     ld PB+GPIO_DDR,a  ; output mode 
-      00006C C7 50 08         [ 1]   14     ld PB+GPIO_CR1,a  ; push pull output 
-                                     15 ; set pin 1,2 as output push pull
-                                     16 ; PA0,PA2 
-                                     17 ; PA0 used as common for the 3 LEDs 
-      00006F A6 05            [ 1]   18     ld a,#(1<<0)|(1<<2)
-      000071 C7 50 02         [ 1]   19     ld PA+GPIO_DDR,a ; output mode      
-      000074 C7 50 03         [ 1]   20     ld PA+GPIO_CR1,a ; push pull output 
-      000077 72 10 50 00      [ 1]   21     bset PA+GPIO_ODR,#0 ; output high 
-      00007B AD 20            [ 4]   22     callr leds_off ; 3 LEDs off
-                                     23 
-      00007D                         24 1$: ; cycle 3 LEDs 
-      00007D 72 15 50 00      [ 1]   25     bres PA+GPIO_ODR,#2 ; PA2 low LED1 on 
-      000081 AD 27            [ 4]   26     callr delay 
-      000083 72 14 50 00      [ 1]   27     bset PA+GPIO_ODR,#2 ; PA2 high, LED1 off 
-      000087 72 1D 50 05      [ 1]   28     bres PB+GPIO_ODR,#6  ; PB6 low , LED2 on 
-      00008B AD 1D            [ 4]   29     callr delay 
-      00008D 72 1C 50 05      [ 1]   30     bset PB+GPIO_ODR,#6 ; PB6 high, LED2 off 
-      000091 72 1B 50 05      [ 1]   31     bres PB+GPIO_ODR,#5 ; PB5 low , LED3 on 
-      000095 AD 13            [ 4]   32     callr delay 
-      000097 CD 00 9D         [ 4]   33     call leds_off  
-      00009A 20 E1            [ 2]   34     jra 1$ 
-      00009C 81               [ 4]   35     ret 
-                                     36 
-      00009D                         37 leds_off: 
-      00009D 72 14 50 00      [ 1]   38     bset PA+GPIO_ODR,#2 ; output low  
-      0000A1 72 1A 50 05      [ 1]   39     bset PB+GPIO_ODR,#5 ; output low 
-      0000A5 72 1C 50 05      [ 1]   40     bset PB+GPIO_ODR,#6 ; output low 
-      0000A9 81               [ 4]   41     ret 
-                                     42 
-      0000AA                         43 delay:
-      0000AA A6 0F            [ 1]   44     ld a,#15
-      0000AC 5F               [ 1]   45     clrw x 
-      0000AD                         46 1$: 
-      0000AD 5A               [ 2]   47     decw x 
-      0000AE 26 FD            [ 1]   48     jrne 1$ 
-      0000B0 4A               [ 1]   49     dec a 
-      0000B1 26 FA            [ 1]   50     jrne 1$
-      0000B3 81               [ 4]   51     ret 
+                                      9 
+      000067                         10 demo:
+      000067 A6 FF            [ 1]   11     ld a,#255
+      000069 88               [ 1]   12     push a  
+      00006A                         13 0$:
+      00006A AD 0E            [ 4]   14     callr leds_off 
+      00006C 84               [ 1]   15     pop a 
+      00006D 4C               [ 1]   16     inc a 
+      00006E A1 0C            [ 1]   17     cp a,#12 
+      000070 27 F5            [ 1]   18     jreq demo 
+      000072 88               [ 1]   19     push a 
+      000073 AD 16            [ 4]   20     callr led_on 
+      000075 AD 3F            [ 4]   21     callr delay 
+      000077 20 F1            [ 2]   22     jra 0$ 
+      000079 81               [ 4]   23     ret 
+                                     24 
+                                     25 ;--------------------------------
+                                     26 ; all LEDs off 
+                                     27 ;--------------------------------
+      00007A                         28 leds_off: 
+      00007A 72 5F 50 02      [ 1]   29     clr PA+GPIO_DDR ; input mode 
+      00007E 72 5F 50 03      [ 1]   30     clr PA+GPIO_CR1 ; no pull up  
+      000082 72 5F 50 07      [ 1]   31     clr PB+GPIO_DDR ; input mode 
+      000086 72 5F 50 08      [ 1]   32     clr PB+GPIO_CR1 ; no pull up 
+      00008A 81               [ 4]   33     ret 
+                                     34 
+                                     35 ;-------------------------------
+                                     36 ; set LED on 
+                                     37 ; input:  A LED number {0..11}
+                                     38 ;-------------------------------
+      00008B                         39 led_on:
+      00008B 97               [ 1]   40     ld xl,a 
+      00008C A6 06            [ 1]   41     ld a,#6 
+      00008E 42               [ 4]   42     mul x,a 
+      00008F 1C 00 C0         [ 2]   43     addw x,#leds_table  
+      000092 90 93            [ 1]   44     ldw y,x ; table entry address 
+      000094 FE               [ 2]   45     ldw x,(x) ; anode port address
+                                     46 ; set anode as output push pull 
+      000095 90 E6 04         [ 1]   47     ld a,(4,y) ; get anode bit mask 
+      000098 EA 03            [ 1]   48     or a,(GPIO_CR1,X)
+      00009A E7 03            [ 1]   49     ld (GPIO_CR1,X),a  ; push pull 
+      00009C E7 02            [ 1]   50     ld (GPIO_DDR,X),a  ; output mode 
+      00009E E7 00            [ 1]   51     ld (GPIO_ODR,x),a  ; anode output high 
+                                     52 ; set cathode output pseudo open drain 
+      0000A0 72 A9 00 02      [ 2]   53     addw y,#2 ; table cathode port address field  
+      0000A4 93               [ 1]   54     ldw x,y 
+      0000A5 FE               [ 2]   55     ldw x,(x) ; cathode port address 
+      0000A6 90 E6 03         [ 1]   56     ld a,(3,y) ; cathode bit mask
+      0000A9 EA 02            [ 1]   57     or a,(GPIO_DDR,X) 
+      0000AB E7 02            [ 1]   58     ld (GPIO_DDR,X),a ; output mode 
+      0000AD 90 E6 03         [ 1]   59     ld a,(3,y)
+      0000B0 43               [ 1]   60     cpl a 
+      0000B1 E4 00            [ 1]   61     and a, (GPIO_ODR,X)
+      0000B3 E7 00            [ 1]   62     ld (GPIO_ODR,X),a ; output low 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 24.
+Hexadecimal [24-Bits]
+
+
+
+      0000B5 81               [ 4]   63     ret 
+                                     64 
+                                     65 
+      0000B6                         66 delay:
+      0000B6 A6 64            [ 1]   67     ld a,#100
+      0000B8 5F               [ 1]   68     clrw x 
+      0000B9                         69 1$: 
+      0000B9 5A               [ 2]   70     decw x 
+      0000BA 26 FD            [ 1]   71     jrne 1$ 
+      0000BC 4A               [ 1]   72     dec a 
+      0000BD 26 FA            [ 1]   73     jrne 1$
+      0000BF 81               [ 4]   74     ret 
+                                     75 
+                                     76 ;---------------------------------------------------
+                                     77 ; LED pinout table 
+                                     78 ; anode port, cathode port 
+                                     79 ; anode bit_mask ->| cathode bit_mask  
+                                     80 ;---------------------------------------------------
+      0000C0                         81 leds_table:
+                                     82 ; LED 0  PA2 ->| PA0
+      0000C0 50 00 50 00             83 .WORD  PA,PA ; anode port, cathode port  
+      0000C4 04 01                   84 .BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
+                                     85 ; LED 1  PA2 ->| PB6
+      0000C6 50 00 50 05             86 .WORD PA,PB 
+      0000CA 04 40                   87 .BYTE (1<<2),(1<<6) ;  
+                                     88 ;LED 2  PA2 ->| PB5
+      0000CC 50 00 50 05             89 .WORD PA,PB  
+      0000D0 04 20                   90 .BYTE (1<<2),(1<<5) ;  
+                                     91 ; LED 3  PA0 ->| PA2  
+      0000D2 50 00 50 00             92 .WORD PA,PA 
+      0000D6 01 04                   93 .BYTE (1<<0),(1<<2) ; 
+                                     94 ; LED 4  PA0 ->| PB6 
+      0000D8 50 00 50 05             95 .WORD PA,PB 
+      0000DC 01 40                   96 .BYTE (1<<0),(1<<6) 
+                                     97 ; LED 5  PA0 ->| PB5 
+      0000DE 50 00 50 05             98 .WORD PA,PB 
+      0000E2 01 20                   99 .BYTE (1<<0),(1<<5) ; 
+                                    100 ; LED 6   PB6  ->| PA2
+      0000E4 50 05 50 00            101 .WORD PB,PA 
+      0000E8 40 04                  102 .BYTE (1<<6),(1<<2)
+                                    103 ; LED 7  PB6 ->| PA0 
+      0000EA 50 05 50 00            104 .WORD PB,PA 
+      0000EE 40 01                  105 .BYTE (1<<6),(1<<0)
+                                    106 ; LED 8   PB6 ->| PB5 
+      0000F0 50 05 50 05            107 .WORD PB,PB  
+      0000F4 40 20                  108 .BYTE (1<<6),(1<<5)
+                                    109 ; LED 9  PB5 ->| PA2 
+      0000F6 50 05 50 00            110 .WORD PB,PA 
+      0000FA 20 04                  111 .BYTE (1<<5),(1<<2)
+                                    112 ; LED 10  PB5 ->| PA 0 
+      0000FC 50 05 50 00            113 .WORD PB,PA  
+      000100 20 01                  114 .BYTE (1<<5),(1<<0)
+                                    115 ; LED 11   PB5 ->| PB6 
+      000102 50 05 50 05            116 .WORD PB,PB 
+      000106 20 40                  117 .BYTE (1<<5),(1<<6)
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 25.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1226,7 +1297,7 @@ Symbol Table
     I2C_SR1_=  000007     |     I2C_SR2 =  005218     |     I2C_SR2_=  000002 
     I2C_SR2_=  000001     |     I2C_SR2_=  000000     |     I2C_SR2_=  000003 
     I2C_SR2_=  000005     |     I2C_SR3 =  005219     |     I2C_SR3_=  000001 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 25.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 26.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1286,7 +1357,7 @@ Symbol Table
     TIM2_SR1=  005255     |     TIM2_SR2=  005256     |     TIM3_ARR=  00528E 
     TIM3_ARR=  00528F     |     TIM3_BKR=  005294     |     TIM3_CCE=  00528A 
     TIM3_CCM=  005288     |     TIM3_CCM=  005289     |     TIM3_CCR=  005290 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 26.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 27.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1343,18 +1414,19 @@ Symbol Table
     USART_SR=  000007     |     WFE_CR1 =  0050A6     |     WFE_CR2 =  0050A7 
     WWDG_CR =  0050D3     |     WWDG_WR =  0050D4     |   5 acc16      00000B GR
   5 acc8       00000C GR  |   7 clock_in   000020 R   |   7 cold_sta   00004B R
-  7 delay      0000AA R   |   5 delay_ti   00000A R   |   7 demo       000067 R
+  7 delay      0000B6 R   |   5 delay_ti   00000A R   |   7 demo       000067 R
   5 flags      00000F GR  |   6 free_ram   000100 R   |   3 free_ram   00057E R
-  7 leds_off   00009D R   |   7 pause      00003E R   |   5 ptr16      00000D GR
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 27.
+  7 led_on     00008B R   |   7 leds_off   00007A R   |   7 leds_tab   0000C0 R
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
-  5 ptr8       00000E R   |   3 stack_fu   00057E R   |   3 stack_un   0005FE R
-  5 ticks      000008 R   |   7 timer4_i   000025 R
+  7 pause      00003E R   |   5 ptr16      00000D GR  |   5 ptr8       00000E R
+  3 stack_fu   00057E R   |   3 stack_un   0005FE R   |   5 ticks      000008 R
+  7 timer4_i   000025 R
 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 29.
 Hexadecimal [24-Bits]
 
 Area Table
@@ -1366,5 +1438,5 @@ Area Table
    4 DATA       size      0   flags    8
    5 DATA1      size      8   flags    8
    6 DATA2      size      0   flags    8
-   7 CODE       size     B4   flags    0
+   7 CODE       size    108   flags    0
 
