@@ -18,7 +18,8 @@ demo:
     jreq demo 
     push a 
     callr led_on 
-    callr delay 
+    ld a,msec 
+    call pause  
     jra 0$ 
     ret 
 
@@ -62,16 +63,6 @@ led_on:
     ld (GPIO_ODR,X),a ; output low 
     ret 
 
-
-delay:
-    ld a,#100
-    clrw x 
-1$: 
-    decw x 
-    jrne 1$ 
-    dec a 
-    jrne 1$
-    ret 
 
 ;---------------------------------------------------
 ; LED pinout table 

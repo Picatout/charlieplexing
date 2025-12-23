@@ -42,12 +42,8 @@ stack_unf: ; stack underflow ; control_stack bottom
 	.org 8 
 ;--------------------------------------	
 
-ticks: .blkw 1 ; 1.664 milliseconds ticks counter (see Timer4UpdateHandler)
-delay_timer: .blkb 1 ; 60 hertz timer   
-acc16:: .blkb 1 ; 16 bits accumulator, acc24 high-byte
-acc8::  .blkb 1 ;  8 bits accumulator, acc24 low-byte  
-ptr16::  .blkb 1 ; 16 bits pointer , farptr high-byte 
-ptr8:   .blkb 1 ; 8 bits pointer, farptr low-byte  
+msec: .blkb 1 ; milliseconds delay for LED walk 
+delay_timer: .blkb 1 ; pause timer 
 flags:: .blkb 1 ; various boolean flags
 
 	.org 0x100
@@ -67,23 +63,16 @@ NonHandledInterrupt:
 ;------------------------------
 ; TIMER 4 is used to maintain 
 ; timers and ticks 
-; interrupt interval is 1.664 msec 
+; interrupt interval is 1 msec 
 ;--------------------------------
 Timer4UpdateHandler:
 	clr TIM4_SR 
-	_ldxz ticks
-	incw x 
-	_strxz ticks
-; decrement delay_timer on ticks mod 10==0
-	ld a,#10
-	div x,a 
-	tnz a
-	jrne 9$
-1$:	 
-	btjf flags,#F_DELAY,9$  
+	tnz delay_timer 
+	jreq 9$ 
+; decrement delay_timer
 	dec delay_timer 
 	jrne 9$ 
-	bres flags,#F_DELAY   
+	bres flags, #F_DELAY  
 9$:
 	iret 
 
@@ -117,7 +106,7 @@ timer4_init:
 ;------------------------
 ; suspend execution 
 ; input:
-;   A     n/60 seconds  
+;   A    pause in msec 
 ;-------------------------
 pause:
 	_straz delay_timer 
@@ -151,7 +140,8 @@ cold_start:
     jrne 1$ 
 ;----------------------    
 	call timer4_init ; msec ticks timer 
-;	rim ; enable interrupts
+	rim ; enable interrupts
+	mov msec, #50 
 	jp demo 
 
 

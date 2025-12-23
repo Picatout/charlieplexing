@@ -895,7 +895,7 @@ Hexadecimal [24-Bits]
                                       7 ;;--------------------------------------
                                       8     .area HOME 
                                       9 
-      008000 82 00 80 CB             10 	int cold_start	        ; reset
+      008000 82 00 80 C1             10 	int cold_start	        ; reset
       008004 82 00 80 80             11 	int NonHandledInterrupt	; trap
       008008 82 00 00 00             12 	int 0               	; irq0 not used 
       00800C 82 00 80 80             13 	int NonHandledInterrupt	; irq1 FLASH  
@@ -978,136 +978,124 @@ Hexadecimal [24-Bits]
       000008                         42 	.org 8 
                                      43 ;--------------------------------------	
                                      44 
-      000008                         45 ticks: .blkw 1 ; 1.664 milliseconds ticks counter (see Timer4UpdateHandler)
-      00000A                         46 delay_timer: .blkb 1 ; 60 hertz timer   
-      00000B                         47 acc16:: .blkb 1 ; 16 bits accumulator, acc24 high-byte
-      00000C                         48 acc8::  .blkb 1 ;  8 bits accumulator, acc24 low-byte  
-      00000D                         49 ptr16::  .blkb 1 ; 16 bits pointer , farptr high-byte 
-      00000E                         50 ptr8:   .blkb 1 ; 8 bits pointer, farptr low-byte  
-      00000F                         51 flags:: .blkb 1 ; various boolean flags
+      000008                         45 msec: .blkb 1 ; milliseconds delay for LED walk 
+      000009                         46 delay_timer: .blkb 1 ; pause timer 
+      00000A                         47 flags:: .blkb 1 ; various boolean flags
+                                     48 
+      000100                         49 	.org 0x100
+                                     50 
+      000100                         51 free_ram: ; from here RAM free up to free_ram_end 
                                      52 
-      000100                         53 	.org 0x100
-                                     54 
+                                     53 
+                                     54 	.area CODE 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 20.
 Hexadecimal [24-Bits]
 
 
 
-      000100                         55 free_ram: ; from here RAM free up to free_ram_end 
-                                     56 
-                                     57 
-                                     58 	.area CODE 
-                                     59 
-                                     60 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                     61 ; non handled interrupt 
-                                     62 ; reset MCU
-                                     63 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      008080                         64 NonHandledInterrupt:
-      008080 80               [11]   65 	iret 
-                                     66 
-                                     67 ;------------------------------
-                                     68 ; TIMER 4 is used to maintain 
-                                     69 ; timers and ticks 
-                                     70 ; interrupt interval is 1.664 msec 
-                                     71 ;--------------------------------
-      008081                         72 Timer4UpdateHandler:
-      008081 72 5F 52 E4      [ 1]   73 	clr TIM4_SR 
-      000005                         74 	_ldxz ticks
-      008085 BE 08                    1     .byte 0xbe,ticks 
-      008087 5C               [ 1]   75 	incw x 
-      000008                         76 	_strxz ticks
-      008088 BF 08                    1     .byte 0xbf,ticks 
-                                     77 ; decrement delay_timer on ticks mod 10==0
-      00808A A6 0A            [ 1]   78 	ld a,#10
-      00808C 62               [ 2]   79 	div x,a 
-      00808D 4D               [ 1]   80 	tnz a
-      00808E 26 0F            [ 1]   81 	jrne 9$
-      008090                         82 1$:	 
-      008090 72 01 00 0F 0A   [ 2]   83 	btjf flags,#F_DELAY,9$  
-      008095 72 5A 00 0A      [ 1]   84 	dec delay_timer 
-      008099 26 04            [ 1]   85 	jrne 9$ 
-      00809B 72 11 00 0F      [ 1]   86 	bres flags,#F_DELAY   
-      00809F                         87 9$:
-      00809F 80               [11]   88 	iret 
-                                     89 
-                                     90 
-                                     91 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                     92 ;    peripherals initialization
-                                     93 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                     94 
-                                     95 ;----------------------------------------
-                                     96 ; inialize MCU clock 
-                                     97 ; HSI no divisor 
-                                     98 ; FMSTR=16Mhz 
-                                     99 ;----------------------------------------
-      0080A0                        100 clock_init:	
-      0080A0 72 5F 50 C0      [ 1]  101 	clr CLK_CKDIVR 
-      0080A4 81               [ 4]  102 	ret
-                                    103 
-                                    104 ;---------------------------------
-                                    105 ; TIM4 is configured to generate an 
-                                    106 ; interrupt every 1.66 millisecond 
-                                    107 ;----------------------------------
+                                     55 
+                                     56 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                     57 ; non handled interrupt 
+                                     58 ; reset MCU
+                                     59 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      008080                         60 NonHandledInterrupt:
+      008080 80               [11]   61 	iret 
+                                     62 
+                                     63 ;------------------------------
+                                     64 ; TIMER 4 is used to maintain 
+                                     65 ; timers and ticks 
+                                     66 ; interrupt interval is 1 msec 
+                                     67 ;--------------------------------
+      008081                         68 Timer4UpdateHandler:
+      008081 72 5F 52 E4      [ 1]   69 	clr TIM4_SR 
+      008085 72 5D 00 09      [ 1]   70 	tnz delay_timer 
+      008089 27 0A            [ 1]   71 	jreq 9$ 
+                                     72 ; decrement delay_timer
+      00808B 72 5A 00 09      [ 1]   73 	dec delay_timer 
+      00808F 26 04            [ 1]   74 	jrne 9$ 
+      008091 72 11 00 0A      [ 1]   75 	bres flags, #F_DELAY  
+      008095                         76 9$:
+      008095 80               [11]   77 	iret 
+                                     78 
+                                     79 
+                                     80 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                     81 ;    peripherals initialization
+                                     82 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                     83 
+                                     84 ;----------------------------------------
+                                     85 ; inialize MCU clock 
+                                     86 ; HSI no divisor 
+                                     87 ; FMSTR=16Mhz 
+                                     88 ;----------------------------------------
+      008096                         89 clock_init:	
+      008096 72 5F 50 C0      [ 1]   90 	clr CLK_CKDIVR 
+      00809A 81               [ 4]   91 	ret
+                                     92 
+                                     93 ;---------------------------------
+                                     94 ; TIM4 is configured to generate an 
+                                     95 ; interrupt every 1.66 millisecond 
+                                     96 ;----------------------------------
+      00809B                         97 timer4_init:
+      00809B 72 14 50 C3      [ 1]   98 	bset CLK_PCKENR1,#CLK_PCKENR1_TIM4
+      00809F 72 11 52 E0      [ 1]   99 	bres TIM4_CR1,#TIM4_CR1_CEN 
+      0080A3 35 07 52 E7      [ 1]  100 	mov TIM4_PSCR,#7 ; Fmstr/128=125000 hertz  
+      0080A7 35 83 52 E8      [ 1]  101 	mov TIM4_ARR,#(256-125) ; 125000/125=1 msec 
+      0080AB 35 05 52 E0      [ 1]  102 	mov TIM4_CR1,#((1<<TIM4_CR1_CEN)|(1<<TIM4_CR1_URS))
+      0080AF 72 10 52 E3      [ 1]  103 	bset TIM4_IER,#TIM4_IER_UIE
+      0080B3 81               [ 4]  104 	ret
+                                    105 
+                                    106 ;------------------------
+                                    107 ; suspend execution 
+                                    108 ; input:
+                                    109 ;   A    pause in msec 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 21.
 Hexadecimal [24-Bits]
 
 
 
-      0080A5                        108 timer4_init:
-      0080A5 72 14 50 C3      [ 1]  109 	bset CLK_PCKENR1,#CLK_PCKENR1_TIM4
-      0080A9 72 11 52 E0      [ 1]  110 	bres TIM4_CR1,#TIM4_CR1_CEN 
-      0080AD 35 07 52 E7      [ 1]  111 	mov TIM4_PSCR,#7 ; Fmstr/128=125000 hertz  
-      0080B1 35 83 52 E8      [ 1]  112 	mov TIM4_ARR,#(256-125) ; 125000/125=1 msec 
-      0080B5 35 05 52 E0      [ 1]  113 	mov TIM4_CR1,#((1<<TIM4_CR1_CEN)|(1<<TIM4_CR1_URS))
-      0080B9 72 10 52 E3      [ 1]  114 	bset TIM4_IER,#TIM4_IER_UIE
-      0080BD 81               [ 4]  115 	ret
-                                    116 
-                                    117 ;------------------------
-                                    118 ; suspend execution 
-                                    119 ; input:
-                                    120 ;   A     n/60 seconds  
-                                    121 ;-------------------------
-      0080BE                        122 pause:
-      00003E                        123 	_straz delay_timer 
-      0080BE B7 0A                    1     .byte 0xb7,delay_timer 
-      0080C0 72 10 00 0F      [ 1]  124 	bset flags,#F_DELAY 
-      0080C4 8F               [10]  125 1$: wfi 	
-      0080C5 72 00 00 0F FA   [ 2]  126 	btjt flags,#F_DELAY,1$ 
-      0080CA 81               [ 4]  127 	ret 
-                                    128 
-                                    129 
-                                    130 
-                                    131 ;-------------------------------------
-                                    132 ;  initialization entry point 
-                                    133 ;-------------------------------------
-      0080CB                        134 cold_start:
-                                    135 ;set stack 
-      0080CB AE 05 FF         [ 2]  136 	ldw x,#STACK_EMPTY
-      0080CE 94               [ 1]  137 	ldw sp,x
-                                    138 ; clear all ram 
-      0080CF 7F               [ 1]  139 0$: clr (x)
-      0080D0 5A               [ 2]  140 	decw x 
-      0080D1 26 FC            [ 1]  141 	jrne 0$
-      0080D3 CD 80 A0         [ 4]  142     call clock_init 
-                                    143 ;----------------------
-                                    144 ; SWIM DELAY  
-                                    145 ;----------------------
-      0080D6 A6 00            [ 1]  146     ld a,#0
-      0080D8 AE FF FF         [ 2]  147 1$: ldw x,#0xffff 
-      0080DB 5A               [ 2]  148 2$: decw x 
-      0080DC 26 FD            [ 1]  149     jrne 2$ 
-      0080DE 4A               [ 1]  150     dec a 
-      0080DF 26 F7            [ 1]  151     jrne 1$ 
-                                    152 ;----------------------    
-      0080E1 CD 80 A5         [ 4]  153 	call timer4_init ; msec ticks timer 
-                                    154 ;	rim ; enable interrupts
-      0080E4 CC 80 E7         [ 2]  155 	jp demo 
-                                    156 
-                                    157 
-                                    158 
-                                    159 
-                                    160 
-                                    161 
+                                    110 ;-------------------------
+      0080B4                        111 pause:
+      000034                        112 	_straz delay_timer 
+      0080B4 B7 09                    1     .byte 0xb7,delay_timer 
+      0080B6 72 10 00 0A      [ 1]  113 	bset flags,#F_DELAY 
+      0080BA 8F               [10]  114 1$: wfi 	
+      0080BB 72 00 00 0A FA   [ 2]  115 	btjt flags,#F_DELAY,1$ 
+      0080C0 81               [ 4]  116 	ret 
+                                    117 
+                                    118 
+                                    119 
+                                    120 ;-------------------------------------
+                                    121 ;  initialization entry point 
+                                    122 ;-------------------------------------
+      0080C1                        123 cold_start:
+                                    124 ;set stack 
+      0080C1 AE 05 FF         [ 2]  125 	ldw x,#STACK_EMPTY
+      0080C4 94               [ 1]  126 	ldw sp,x
+                                    127 ; clear all ram 
+      0080C5 7F               [ 1]  128 0$: clr (x)
+      0080C6 5A               [ 2]  129 	decw x 
+      0080C7 26 FC            [ 1]  130 	jrne 0$
+      0080C9 CD 80 96         [ 4]  131     call clock_init 
+                                    132 ;----------------------
+                                    133 ; SWIM DELAY  
+                                    134 ;----------------------
+      0080CC A6 00            [ 1]  135     ld a,#0
+      0080CE AE FF FF         [ 2]  136 1$: ldw x,#0xffff 
+      0080D1 5A               [ 2]  137 2$: decw x 
+      0080D2 26 FD            [ 1]  138     jrne 2$ 
+      0080D4 4A               [ 1]  139     dec a 
+      0080D5 26 F7            [ 1]  140     jrne 1$ 
+                                    141 ;----------------------    
+      0080D7 CD 80 9B         [ 4]  142 	call timer4_init ; msec ticks timer 
+      0080DA 9A               [ 1]  143 	rim ; enable interrupts
+      0080DB 35 32 00 08      [ 1]  144 	mov msec, #50 
+      0080DF CC 80 E2         [ 2]  145 	jp demo 
+                                    146 
+                                    147 
+                                    148 
+                                    149 
+                                    150 
+                                    151 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 22.
 Hexadecimal [24-Bits]
 
@@ -1124,119 +1112,110 @@ Hexadecimal [24-Bits]
 
                                       8  
                                       9 
-      0080E7                         10 demo:
-      0080E7 A6 FF            [ 1]   11     ld a,#255
-      0080E9 88               [ 1]   12     push a  
-      0080EA                         13 0$:
-      0080EA AD 0E            [ 4]   14     callr leds_off 
-      0080EC 84               [ 1]   15     pop a 
-      0080ED 4C               [ 1]   16     inc a 
-      0080EE A1 0C            [ 1]   17     cp a,#12 
-      0080F0 27 F5            [ 1]   18     jreq demo 
-      0080F2 88               [ 1]   19     push a 
-      0080F3 AD 16            [ 4]   20     callr led_on 
-      0080F5 AD 3F            [ 4]   21     callr delay 
-      0080F7 20 F1            [ 2]   22     jra 0$ 
-      0080F9 81               [ 4]   23     ret 
-                                     24 
-                                     25 ;--------------------------------
-                                     26 ; all LEDs off 
-                                     27 ;--------------------------------
-      0080FA                         28 leds_off: 
-      0080FA 72 5F 50 02      [ 1]   29     clr PA+GPIO_DDR ; input mode 
-      0080FE 72 5F 50 03      [ 1]   30     clr PA+GPIO_CR1 ; no pull up  
-      008102 72 5F 50 07      [ 1]   31     clr PB+GPIO_DDR ; input mode 
-      008106 72 5F 50 08      [ 1]   32     clr PB+GPIO_CR1 ; no pull up 
-      00810A 81               [ 4]   33     ret 
-                                     34 
-                                     35 ;-------------------------------
-                                     36 ; set LED on 
-                                     37 ; input:  A LED number {0..11}
-                                     38 ;-------------------------------
-      00810B                         39 led_on:
-      00810B 97               [ 1]   40     ld xl,a 
-      00810C A6 06            [ 1]   41     ld a,#6 
-      00810E 42               [ 4]   42     mul x,a 
-      00810F 1C 81 40         [ 2]   43     addw x,#leds_table  
-      008112 90 93            [ 1]   44     ldw y,x ; table entry address 
-      008114 FE               [ 2]   45     ldw x,(x) ; anode port address
-                                     46 ; set anode as output push pull 
-      008115 90 E6 04         [ 1]   47     ld a,(4,y) ; get anode bit mask 
-      008118 EA 03            [ 1]   48     or a,(GPIO_CR1,X)
-      00811A E7 03            [ 1]   49     ld (GPIO_CR1,X),a  ; push pull 
-      00811C E7 02            [ 1]   50     ld (GPIO_DDR,X),a  ; output mode 
-      00811E E7 00            [ 1]   51     ld (GPIO_ODR,x),a  ; anode output high 
-                                     52 ; set cathode output pseudo open drain 
-      008120 72 A9 00 02      [ 2]   53     addw y,#2 ; table cathode port address field  
-      008124 93               [ 1]   54     ldw x,y 
-      008125 FE               [ 2]   55     ldw x,(x) ; cathode port address 
-      008126 90 E6 03         [ 1]   56     ld a,(3,y) ; cathode bit mask
-      008129 EA 02            [ 1]   57     or a,(GPIO_DDR,X) 
-      00812B E7 02            [ 1]   58     ld (GPIO_DDR,X),a ; output mode 
-      00812D 90 E6 03         [ 1]   59     ld a,(3,y)
-      008130 43               [ 1]   60     cpl a 
-      008131 E4 00            [ 1]   61     and a, (GPIO_ODR,X)
-      008133 E7 00            [ 1]   62     ld (GPIO_ODR,X),a ; output low 
+      0080E2                         10 demo:
+      0080E2 A6 FF            [ 1]   11     ld a,#255
+      0080E4 88               [ 1]   12     push a  
+      0080E5                         13 0$:
+      0080E5 AD 12            [ 4]   14     callr leds_off 
+      0080E7 84               [ 1]   15     pop a 
+      0080E8 4C               [ 1]   16     inc a 
+      0080E9 A1 0C            [ 1]   17     cp a,#12 
+      0080EB 27 F5            [ 1]   18     jreq demo 
+      0080ED 88               [ 1]   19     push a 
+      0080EE AD 1A            [ 4]   20     callr led_on 
+      0080F0 C6 00 08         [ 1]   21     ld a,msec 
+      0080F3 CD 80 B4         [ 4]   22     call pause  
+      0080F6 20 ED            [ 2]   23     jra 0$ 
+      0080F8 81               [ 4]   24     ret 
+                                     25 
+                                     26 ;--------------------------------
+                                     27 ; all LEDs off 
+                                     28 ;--------------------------------
+      0080F9                         29 leds_off: 
+      0080F9 72 5F 50 02      [ 1]   30     clr PA+GPIO_DDR ; input mode 
+      0080FD 72 5F 50 03      [ 1]   31     clr PA+GPIO_CR1 ; no pull up  
+      008101 72 5F 50 07      [ 1]   32     clr PB+GPIO_DDR ; input mode 
+      008105 72 5F 50 08      [ 1]   33     clr PB+GPIO_CR1 ; no pull up 
+      008109 81               [ 4]   34     ret 
+                                     35 
+                                     36 ;-------------------------------
+                                     37 ; set LED on 
+                                     38 ; input:  A LED number {0..11}
+                                     39 ;-------------------------------
+      00810A                         40 led_on:
+      00810A 97               [ 1]   41     ld xl,a 
+      00810B A6 06            [ 1]   42     ld a,#6 
+      00810D 42               [ 4]   43     mul x,a 
+      00810E 1C 81 35         [ 2]   44     addw x,#leds_table  
+      008111 90 93            [ 1]   45     ldw y,x ; table entry address 
+      008113 FE               [ 2]   46     ldw x,(x) ; anode port address
+                                     47 ; set anode as output push pull 
+      008114 90 E6 04         [ 1]   48     ld a,(4,y) ; get anode bit mask 
+      008117 EA 03            [ 1]   49     or a,(GPIO_CR1,X)
+      008119 E7 03            [ 1]   50     ld (GPIO_CR1,X),a  ; push pull 
+      00811B E7 02            [ 1]   51     ld (GPIO_DDR,X),a  ; output mode 
+      00811D E7 00            [ 1]   52     ld (GPIO_ODR,x),a  ; anode output high 
+                                     53 ; set cathode output pseudo open drain 
+      00811F 72 A9 00 02      [ 2]   54     addw y,#2 ; table cathode port address field  
+      008123 93               [ 1]   55     ldw x,y 
+      008124 FE               [ 2]   56     ldw x,(x) ; cathode port address 
+      008125 90 E6 03         [ 1]   57     ld a,(3,y) ; cathode bit mask
+      008128 EA 02            [ 1]   58     or a,(GPIO_DDR,X) 
+      00812A E7 02            [ 1]   59     ld (GPIO_DDR,X),a ; output mode 
+      00812C 90 E6 03         [ 1]   60     ld a,(3,y)
+      00812F 43               [ 1]   61     cpl a 
+      008130 E4 00            [ 1]   62     and a, (GPIO_ODR,X)
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 24.
 Hexadecimal [24-Bits]
 
 
 
-      008135 81               [ 4]   63     ret 
-                                     64 
+      008132 E7 00            [ 1]   63     ld (GPIO_ODR,X),a ; output low 
+      008134 81               [ 4]   64     ret 
                                      65 
-      008136                         66 delay:
-      008136 A6 64            [ 1]   67     ld a,#100
-      008138 5F               [ 1]   68     clrw x 
-      008139                         69 1$: 
-      008139 5A               [ 2]   70     decw x 
-      00813A 26 FD            [ 1]   71     jrne 1$ 
-      00813C 4A               [ 1]   72     dec a 
-      00813D 26 FA            [ 1]   73     jrne 1$
-      00813F 81               [ 4]   74     ret 
-                                     75 
-                                     76 ;---------------------------------------------------
-                                     77 ; LED pinout table 
-                                     78 ; anode port, cathode port 
-                                     79 ; anode bit_mask ->| cathode bit_mask  
-                                     80 ;---------------------------------------------------
-      008140                         81 leds_table:
-                                     82 ; LED 0  PA2 ->| PA0
-      008140 50 00 50 00             83 .WORD  PA,PA ; anode port, cathode port  
-      008144 04 01                   84 .BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
-                                     85 ; LED 1  PA2 ->| PB6
-      008146 50 00 50 05             86 .WORD PA,PB 
-      00814A 04 40                   87 .BYTE (1<<2),(1<<6) ;  
-                                     88 ;LED 2  PA2 ->| PB5
-      00814C 50 00 50 05             89 .WORD PA,PB  
-      008150 04 20                   90 .BYTE (1<<2),(1<<5) ;  
-                                     91 ; LED 3  PA0 ->| PA2  
-      008152 50 00 50 00             92 .WORD PA,PA 
-      008156 01 04                   93 .BYTE (1<<0),(1<<2) ; 
-                                     94 ; LED 4  PA0 ->| PB6 
-      008158 50 00 50 05             95 .WORD PA,PB 
-      00815C 01 40                   96 .BYTE (1<<0),(1<<6) 
-                                     97 ; LED 5  PA0 ->| PB5 
-      00815E 50 00 50 05             98 .WORD PA,PB 
-      008162 01 20                   99 .BYTE (1<<0),(1<<5) ; 
-                                    100 ; LED 6   PB6  ->| PA2
-      008164 50 05 50 00            101 .WORD PB,PA 
-      008168 40 04                  102 .BYTE (1<<6),(1<<2)
-                                    103 ; LED 7  PB6 ->| PA0 
-      00816A 50 05 50 00            104 .WORD PB,PA 
-      00816E 40 01                  105 .BYTE (1<<6),(1<<0)
-                                    106 ; LED 8   PB6 ->| PB5 
-      008170 50 05 50 05            107 .WORD PB,PB  
-      008174 40 20                  108 .BYTE (1<<6),(1<<5)
-                                    109 ; LED 9  PB5 ->| PA2 
-      008176 50 05 50 00            110 .WORD PB,PA 
-      00817A 20 04                  111 .BYTE (1<<5),(1<<2)
-                                    112 ; LED 10  PB5 ->| PA 0 
-      00817C 50 05 50 00            113 .WORD PB,PA  
-      008180 20 01                  114 .BYTE (1<<5),(1<<0)
-                                    115 ; LED 11   PB5 ->| PB6 
-      008182 50 05 50 05            116 .WORD PB,PB 
-      008186 20 40                  117 .BYTE (1<<5),(1<<6)
+                                     66 
+                                     67 ;---------------------------------------------------
+                                     68 ; LED pinout table 
+                                     69 ; anode port, cathode port 
+                                     70 ; anode bit_mask ->| cathode bit_mask  
+                                     71 ;---------------------------------------------------
+      008135                         72 leds_table:
+                                     73 ; LED 0  PA2 ->| PA0
+      008135 50 00 50 00             74 .WORD  PA,PA ; anode port, cathode port  
+      008139 04 01                   75 .BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
+                                     76 ; LED 1  PA2 ->| PB6
+      00813B 50 00 50 05             77 .WORD PA,PB 
+      00813F 04 40                   78 .BYTE (1<<2),(1<<6) ;  
+                                     79 ;LED 2  PA2 ->| PB5
+      008141 50 00 50 05             80 .WORD PA,PB  
+      008145 04 20                   81 .BYTE (1<<2),(1<<5) ;  
+                                     82 ; LED 3  PA0 ->| PA2  
+      008147 50 00 50 00             83 .WORD PA,PA 
+      00814B 01 04                   84 .BYTE (1<<0),(1<<2) ; 
+                                     85 ; LED 4  PA0 ->| PB6 
+      00814D 50 00 50 05             86 .WORD PA,PB 
+      008151 01 40                   87 .BYTE (1<<0),(1<<6) 
+                                     88 ; LED 5  PA0 ->| PB5 
+      008153 50 00 50 05             89 .WORD PA,PB 
+      008157 01 20                   90 .BYTE (1<<0),(1<<5) ; 
+                                     91 ; LED 6   PB6  ->| PA2
+      008159 50 05 50 00             92 .WORD PB,PA 
+      00815D 40 04                   93 .BYTE (1<<6),(1<<2)
+                                     94 ; LED 7  PB6 ->| PA0 
+      00815F 50 05 50 00             95 .WORD PB,PA 
+      008163 40 01                   96 .BYTE (1<<6),(1<<0)
+                                     97 ; LED 8   PB6 ->| PB5 
+      008165 50 05 50 05             98 .WORD PB,PB  
+      008169 40 20                   99 .BYTE (1<<6),(1<<5)
+                                    100 ; LED 9  PB5 ->| PA2 
+      00816B 50 05 50 00            101 .WORD PB,PA 
+      00816F 20 04                  102 .BYTE (1<<5),(1<<2)
+                                    103 ; LED 10  PB5 ->| PA 0 
+      008171 50 05 50 00            104 .WORD PB,PA  
+      008175 20 01                  105 .BYTE (1<<5),(1<<0)
+                                    106 ; LED 11   PB5 ->| PB6 
+      008177 50 05 50 05            107 .WORD PB,PB 
+      00817B 20 40                  108 .BYTE (1<<5),(1<<6)
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 25.
 Hexadecimal [24-Bits]
 
@@ -1412,19 +1391,17 @@ Symbol Table
     USART_SR=  000004     |     USART_SR=  000002     |     USART_SR=  000003 
     USART_SR=  000000     |     USART_SR=  000005     |     USART_SR=  000006 
     USART_SR=  000007     |     WFE_CR1 =  0050A6     |     WFE_CR2 =  0050A7 
-    WWDG_CR =  0050D3     |     WWDG_WR =  0050D4     |   5 acc16      00000B GR
-  5 acc8       00000C GR  |   7 clock_in   000020 R   |   7 cold_sta   00004B R
-  7 delay      0000B6 R   |   5 delay_ti   00000A R   |   7 demo       000067 R
-  5 flags      00000F GR  |   6 free_ram   000100 R   |   3 free_ram   00057E R
-  7 led_on     00008B R   |   7 leds_off   00007A R   |   7 leds_tab   0000C0 R
+    WWDG_CR =  0050D3     |     WWDG_WR =  0050D4     |   7 clock_in   000016 R
+  7 cold_sta   000041 R   |   5 delay_ti   000009 R   |   7 demo       000062 R
+  5 flags      00000A GR  |   6 free_ram   000100 R   |   3 free_ram   00057E R
+  7 led_on     00008A R   |   7 leds_off   000079 R   |   7 leds_tab   0000B5 R
+  5 msec       000008 R   |   7 pause      000034 R   |   3 stack_fu   00057E R
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
-  7 pause      00003E R   |   5 ptr16      00000D GR  |   5 ptr8       00000E R
-  3 stack_fu   00057E R   |   3 stack_un   0005FE R   |   5 ticks      000008 R
-  7 timer4_i   000025 R
+  3 stack_un   0005FE R   |   7 timer4_i   00001B R
 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 29.
 Hexadecimal [24-Bits]
@@ -1436,7 +1413,7 @@ Area Table
    2 SSEG       size      0   flags    8
    3 SSEG0      size     80   flags    8
    4 DATA       size      0   flags    8
-   5 DATA1      size      8   flags    8
+   5 DATA1      size      3   flags    8
    6 DATA2      size      0   flags    8
-   7 CODE       size    108   flags    0
+   7 CODE       size     FD   flags    0
 

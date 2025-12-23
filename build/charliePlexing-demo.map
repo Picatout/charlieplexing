@@ -18,10 +18,10 @@ Area                                    Addr        Size        Decimal Bytes (A
      00000000  s_SSEG0                         
      00000000  s__CODE                         
      00000001  s_DATA                          
-     00000008  l_DATA1                         
+     00000003  l_DATA1                         
      00000080  l_HOME                          
      00000080  l_SSEG0                         
-     00000108  l_CODE                          
+     000000FD  l_CODE                          
      00008000  s_HOME                          
      00008080  s_CODE                          
 
@@ -48,21 +48,18 @@ Hexadecimal  [32-Bits]
 
 Area                                    Addr        Size        Decimal Bytes (Attributes)
 --------------------------------        ----        ----        ------- ----- ------------
-DATA1                               00000000    00000008 =           8. bytes (ABS,CON)
+DATA1                               00000000    00000003 =           3. bytes (ABS,CON)
 
       Value  Global                              Global Defined In Module
       -----  --------------------------------   ------------------------
-     0000000B  acc16                              STM8L001J3
-     0000000C  acc8                               STM8L001J3
-     0000000D  ptr16                              STM8L001J3
-     0000000F  flags                              STM8L001J3
+     0000000A  flags                              STM8L001J3
 
 ASxxxx Linker V03.00 + NoICE + sdld,  page 5.
 Hexadecimal  [32-Bits]
 
 Area                                    Addr        Size        Decimal Bytes (Attributes)
 --------------------------------        ----        ----        ------- ----- ------------
-CODE                                00008080    00000108 =         264. bytes (REL,CON)
+CODE                                00008080    000000FD =         253. bytes (REL,CON)
 
       Value  Global                              Global Defined In Module
       -----  --------------------------------   ------------------------
