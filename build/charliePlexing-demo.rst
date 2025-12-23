@@ -1088,14 +1088,13 @@ Hexadecimal [24-Bits]
                                     141 ;----------------------    
       0080D7 CD 80 9B         [ 4]  142 	call timer4_init ; msec ticks timer 
       0080DA 9A               [ 1]  143 	rim ; enable interrupts
-      0080DB 35 32 00 08      [ 1]  144 	mov msec, #50 
-      0080DF CC 80 E2         [ 2]  145 	jp demo 
+      0080DB CC 80 DE         [ 2]  144 	jp demo 
+                                    145 
                                     146 
                                     147 
                                     148 
                                     149 
                                     150 
-                                    151 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 22.
 Hexadecimal [24-Bits]
 
@@ -1111,112 +1110,134 @@ Hexadecimal [24-Bits]
 
 
                                       8  
-                                      9 
-      0080E2                         10 demo:
-      0080E2 A6 FF            [ 1]   11     ld a,#255
-      0080E4 88               [ 1]   12     push a  
-      0080E5                         13 0$:
-      0080E5 AD 12            [ 4]   14     callr leds_off 
-      0080E7 84               [ 1]   15     pop a 
-      0080E8 4C               [ 1]   16     inc a 
-      0080E9 A1 0C            [ 1]   17     cp a,#12 
-      0080EB 27 F5            [ 1]   18     jreq demo 
-      0080ED 88               [ 1]   19     push a 
-      0080EE AD 1A            [ 4]   20     callr led_on 
-      0080F0 C6 00 08         [ 1]   21     ld a,msec 
-      0080F3 CD 80 B4         [ 4]   22     call pause  
-      0080F6 20 ED            [ 2]   23     jra 0$ 
-      0080F8 81               [ 4]   24     ret 
-                                     25 
-                                     26 ;--------------------------------
-                                     27 ; all LEDs off 
-                                     28 ;--------------------------------
-      0080F9                         29 leds_off: 
-      0080F9 72 5F 50 02      [ 1]   30     clr PA+GPIO_DDR ; input mode 
-      0080FD 72 5F 50 03      [ 1]   31     clr PA+GPIO_CR1 ; no pull up  
-      008101 72 5F 50 07      [ 1]   32     clr PB+GPIO_DDR ; input mode 
-      008105 72 5F 50 08      [ 1]   33     clr PB+GPIO_CR1 ; no pull up 
-      008109 81               [ 4]   34     ret 
-                                     35 
-                                     36 ;-------------------------------
-                                     37 ; set LED on 
-                                     38 ; input:  A LED number {0..11}
-                                     39 ;-------------------------------
-      00810A                         40 led_on:
-      00810A 97               [ 1]   41     ld xl,a 
-      00810B A6 06            [ 1]   42     ld a,#6 
-      00810D 42               [ 4]   43     mul x,a 
-      00810E 1C 81 35         [ 2]   44     addw x,#leds_table  
-      008111 90 93            [ 1]   45     ldw y,x ; table entry address 
-      008113 FE               [ 2]   46     ldw x,(x) ; anode port address
-                                     47 ; set anode as output push pull 
-      008114 90 E6 04         [ 1]   48     ld a,(4,y) ; get anode bit mask 
-      008117 EA 03            [ 1]   49     or a,(GPIO_CR1,X)
-      008119 E7 03            [ 1]   50     ld (GPIO_CR1,X),a  ; push pull 
-      00811B E7 02            [ 1]   51     ld (GPIO_DDR,X),a  ; output mode 
-      00811D E7 00            [ 1]   52     ld (GPIO_ODR,x),a  ; anode output high 
-                                     53 ; set cathode output pseudo open drain 
-      00811F 72 A9 00 02      [ 2]   54     addw y,#2 ; table cathode port address field  
-      008123 93               [ 1]   55     ldw x,y 
-      008124 FE               [ 2]   56     ldw x,(x) ; cathode port address 
-      008125 90 E6 03         [ 1]   57     ld a,(3,y) ; cathode bit mask
-      008128 EA 02            [ 1]   58     or a,(GPIO_DDR,X) 
-      00812A E7 02            [ 1]   59     ld (GPIO_DDR,X),a ; output mode 
-      00812C 90 E6 03         [ 1]   60     ld a,(3,y)
-      00812F 43               [ 1]   61     cpl a 
-      008130 E4 00            [ 1]   62     and a, (GPIO_ODR,X)
+                           000053     9 LOW=83 ; low speed scan 
+                           000001    10 POV=1  ; Persistance Of Vision speed 
+                           00500A    11 BTN_PORT=PC 
+                           000001    12 BTN_BIT=1 
+                                     13 ;------------------------------------
+                                     14 ; The 12 LEDs are scanned in sequence
+                                     15 ; button up scan at LOW speed 
+                                     16 ; button down scan at fast speed (POV)
+                                     17 ; and because of persistance of vision 
+                                     18 ; appears to be all on at same time.
+                                     19 ;-------------------------------------
+      0080DE                         20 demo:
+      0080DE                         21 1$:
+      0080DE A6 FF            [ 1]   22     ld a,#255
+      0080E0 88               [ 1]   23     push a
+      0080E1                         24 2$:
+      0080E1 72 02 50 0B 06   [ 2]   25     btjt BTN_PORT+GPIO_IDR,#BTN_BIT,3$
+      0080E6 35 01 00 08      [ 1]   26     mov msec, #POV
+      0080EA 20 04            [ 2]   27     jra 4$  
+      0080EC                         28 3$: 
+      0080EC 35 53 00 08      [ 1]   29     mov msec,#LOW 
+      0080F0                         30 4$:
+      0080F0 AD 12            [ 4]   31     callr leds_off 
+      0080F2 84               [ 1]   32     pop a 
+      0080F3 4C               [ 1]   33     inc a 
+      0080F4 A1 0C            [ 1]   34     cp a,#12 
+      0080F6 27 E6            [ 1]   35     jreq 1$ 
+      0080F8 88               [ 1]   36     push a 
+      0080F9 AD 1A            [ 4]   37     callr led_on 
+      0080FB C6 00 08         [ 1]   38     ld a,msec 
+      0080FE CD 80 B4         [ 4]   39     call pause  
+      008101 20 DE            [ 2]   40     jra 2$ 
+      008103 81               [ 4]   41     ret 
+                                     42 
+                                     43 ;--------------------------------
+                                     44 ; all LEDs off 
+                                     45 ;--------------------------------
+      008104                         46 leds_off: 
+      008104 72 5F 50 02      [ 1]   47     clr PA+GPIO_DDR ; input mode 
+      008108 72 5F 50 03      [ 1]   48     clr PA+GPIO_CR1 ; no pull up  
+      00810C 72 5F 50 07      [ 1]   49     clr PB+GPIO_DDR ; input mode 
+      008110 72 5F 50 08      [ 1]   50     clr PB+GPIO_CR1 ; no pull up 
+      008114 81               [ 4]   51     ret 
+                                     52 
+                                     53 ;-------------------------------
+                                     54 ; set LED on 
+                                     55 ; input:  A LED number {0..11}
+                                     56 ;-------------------------------
+      008115                         57 led_on:
+      008115 97               [ 1]   58     ld xl,a 
+      008116 A6 06            [ 1]   59     ld a,#6 
+      008118 42               [ 4]   60     mul x,a 
+      008119 1C 81 40         [ 2]   61     addw x,#leds_table  
+      00811C 90 93            [ 1]   62     ldw y,x ; table entry address 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 24.
 Hexadecimal [24-Bits]
 
 
 
-      008132 E7 00            [ 1]   63     ld (GPIO_ODR,X),a ; output low 
-      008134 81               [ 4]   64     ret 
-                                     65 
-                                     66 
-                                     67 ;---------------------------------------------------
-                                     68 ; LED pinout table 
-                                     69 ; anode port, cathode port 
-                                     70 ; anode bit_mask ->| cathode bit_mask  
-                                     71 ;---------------------------------------------------
-      008135                         72 leds_table:
-                                     73 ; LED 0  PA2 ->| PA0
-      008135 50 00 50 00             74 .WORD  PA,PA ; anode port, cathode port  
-      008139 04 01                   75 .BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
-                                     76 ; LED 1  PA2 ->| PB6
-      00813B 50 00 50 05             77 .WORD PA,PB 
-      00813F 04 40                   78 .BYTE (1<<2),(1<<6) ;  
-                                     79 ;LED 2  PA2 ->| PB5
-      008141 50 00 50 05             80 .WORD PA,PB  
-      008145 04 20                   81 .BYTE (1<<2),(1<<5) ;  
-                                     82 ; LED 3  PA0 ->| PA2  
-      008147 50 00 50 00             83 .WORD PA,PA 
-      00814B 01 04                   84 .BYTE (1<<0),(1<<2) ; 
-                                     85 ; LED 4  PA0 ->| PB6 
-      00814D 50 00 50 05             86 .WORD PA,PB 
-      008151 01 40                   87 .BYTE (1<<0),(1<<6) 
-                                     88 ; LED 5  PA0 ->| PB5 
-      008153 50 00 50 05             89 .WORD PA,PB 
-      008157 01 20                   90 .BYTE (1<<0),(1<<5) ; 
-                                     91 ; LED 6   PB6  ->| PA2
-      008159 50 05 50 00             92 .WORD PB,PA 
-      00815D 40 04                   93 .BYTE (1<<6),(1<<2)
-                                     94 ; LED 7  PB6 ->| PA0 
-      00815F 50 05 50 00             95 .WORD PB,PA 
-      008163 40 01                   96 .BYTE (1<<6),(1<<0)
-                                     97 ; LED 8   PB6 ->| PB5 
-      008165 50 05 50 05             98 .WORD PB,PB  
-      008169 40 20                   99 .BYTE (1<<6),(1<<5)
-                                    100 ; LED 9  PB5 ->| PA2 
-      00816B 50 05 50 00            101 .WORD PB,PA 
-      00816F 20 04                  102 .BYTE (1<<5),(1<<2)
-                                    103 ; LED 10  PB5 ->| PA 0 
-      008171 50 05 50 00            104 .WORD PB,PA  
-      008175 20 01                  105 .BYTE (1<<5),(1<<0)
-                                    106 ; LED 11   PB5 ->| PB6 
-      008177 50 05 50 05            107 .WORD PB,PB 
-      00817B 20 40                  108 .BYTE (1<<5),(1<<6)
+      00811E FE               [ 2]   63     ldw x,(x) ; anode port address
+                                     64 ; set anode as output push pull 
+      00811F 90 E6 04         [ 1]   65     ld a,(4,y) ; get anode bit mask 
+      008122 EA 03            [ 1]   66     or a,(GPIO_CR1,X)
+      008124 E7 03            [ 1]   67     ld (GPIO_CR1,X),a  ; push pull 
+      008126 E7 02            [ 1]   68     ld (GPIO_DDR,X),a  ; output mode 
+      008128 E7 00            [ 1]   69     ld (GPIO_ODR,x),a  ; anode output high 
+                                     70 ; set cathode output pseudo open drain 
+      00812A 72 A9 00 02      [ 2]   71     addw y,#2 ; table cathode port address field  
+      00812E 93               [ 1]   72     ldw x,y 
+      00812F FE               [ 2]   73     ldw x,(x) ; cathode port address 
+      008130 90 E6 03         [ 1]   74     ld a,(3,y) ; cathode bit mask
+      008133 EA 02            [ 1]   75     or a,(GPIO_DDR,X) 
+      008135 E7 02            [ 1]   76     ld (GPIO_DDR,X),a ; output mode 
+      008137 90 E6 03         [ 1]   77     ld a,(3,y)
+      00813A 43               [ 1]   78     cpl a 
+      00813B E4 00            [ 1]   79     and a, (GPIO_ODR,X)
+      00813D E7 00            [ 1]   80     ld (GPIO_ODR,X),a ; output low 
+      00813F 81               [ 4]   81     ret 
+                                     82 
+                                     83 
+                                     84 ;---------------------------------------------------
+                                     85 ; LED pinout table 
+                                     86 ; anode port, cathode port 
+                                     87 ; anode bit_mask ->| cathode bit_mask  
+                                     88 ;---------------------------------------------------
+      008140                         89 leds_table:
+                                     90 ; LED 0  PA2 ->| PA0
+      008140 50 00 50 00             91 .WORD  PA,PA ; anode port, cathode port  
+      008144 04 01                   92 .BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
+                                     93 ; LED 1  PA2 ->| PB6
+      008146 50 00 50 05             94 .WORD PA,PB 
+      00814A 04 40                   95 .BYTE (1<<2),(1<<6) ;  
+                                     96 ;LED 2  PA2 ->| PB5
+      00814C 50 00 50 05             97 .WORD PA,PB  
+      008150 04 20                   98 .BYTE (1<<2),(1<<5) ;  
+                                     99 ; LED 3  PA0 ->| PA2  
+      008152 50 00 50 00            100 .WORD PA,PA 
+      008156 01 04                  101 .BYTE (1<<0),(1<<2) ; 
+                                    102 ; LED 4  PA0 ->| PB6 
+      008158 50 00 50 05            103 .WORD PA,PB 
+      00815C 01 40                  104 .BYTE (1<<0),(1<<6) 
+                                    105 ; LED 5  PA0 ->| PB5 
+      00815E 50 00 50 05            106 .WORD PA,PB 
+      008162 01 20                  107 .BYTE (1<<0),(1<<5) ; 
+                                    108 ; LED 6   PB6  ->| PA2
+      008164 50 05 50 00            109 .WORD PB,PA 
+      008168 40 04                  110 .BYTE (1<<6),(1<<2)
+                                    111 ; LED 7  PB6 ->| PA0 
+      00816A 50 05 50 00            112 .WORD PB,PA 
+      00816E 40 01                  113 .BYTE (1<<6),(1<<0)
+                                    114 ; LED 8   PB6 ->| PB5 
+      008170 50 05 50 05            115 .WORD PB,PB  
+      008174 40 20                  116 .BYTE (1<<6),(1<<5)
+                                    117 ; LED 9  PB5 ->| PA2 
 ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 25.
+Hexadecimal [24-Bits]
+
+
+
+      008176 50 05 50 00            118 .WORD PB,PA 
+      00817A 20 04                  119 .BYTE (1<<5),(1<<2)
+                                    120 ; LED 10  PB5 ->| PA 0 
+      00817C 50 05 50 00            121 .WORD PB,PA  
+      008180 20 01                  122 .BYTE (1<<5),(1<<0)
+                                    123 ; LED 11   PB5 ->| PB6 
+      008182 50 05 50 05            124 .WORD PB,PB 
+      008186 20 40                  125 .BYTE (1<<5),(1<<6)
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 26.
 Hexadecimal [24-Bits]
 
 Symbol Table
@@ -1227,100 +1248,101 @@ Symbol Table
     B230400 =  000007     |     B2400   =  000000     |     B38400  =  000004 
     B460800 =  000008     |     B4800   =  000001     |     B57600  =  000005 
     B921600 =  000009     |     B9600   =  000002     |     BEEP_SCR=  0050F3 
-    BTN_PIN =  000002     |     BTN_PORT=  005000     |     CFG_GCR =  007F60 
-    CFG_GCR_=  000001     |     CFG_GCR_=  000000     |     CLK_CCOR=  0050C5 
-    CLK_CKDI=  0050C0     |     CLK_PCKE=  0050C3     |     CLK_PCKE=  000006 
-    CLK_PCKE=  000003     |     CLK_PCKE=  000003     |     CLK_PCKE=  000004 
-    CLK_PCKE=  000000     |     CLK_PCKE=  000001     |     CLK_PCKE=  000002 
-    CLK_PCKE=  000005     |     CLK_PCKE=  000005     |     COMP_CCS=  005302 
-    COMP_CR =  005300     |     COMP_CSR=  005301     |     CPU_A   =  007F00 
-    CPU_CCR =  007F0A     |     CPU_PCE =  007F01     |     CPU_PCH =  007F02 
-    CPU_PCL =  007F03     |     CPU_SPH =  007F08     |     CPU_SPL =  007F09 
-    CPU_XH  =  007F04     |     CPU_XL  =  007F05     |     CPU_YH  =  007F06 
-    CPU_YL  =  007F07     |     DISPLAY_=  000080     |     DM_BK1RE=  007F90 
-    DM_BK1RH=  007F91     |     DM_BK1RL=  007F92     |     DM_BK2RE=  007F93 
-    DM_BK2RH=  007F94     |     DM_BK2RL=  007F95     |     DM_CR1  =  007F96 
-    DM_CR2  =  007F97     |     DM_CSR1 =  007F98     |     DM_CSR2 =  007F99 
-    DM_ENFCT=  007F9A     |     EEPROM_B=  001000     |     EEPROM_E=  0017FF 
-    EEPROM_S=  000800     |     EXTI_CON=  0050A5     |     EXTI_CR1=  0050A0 
-    EXTI_CR2=  0050A1     |     EXTI_CR3=  0050A2     |     EXTI_SR1=  0050A3 
-    EXTI_SR2=  0050A4     |     FLASH_BA=  008000     |     FLASH_CR=  005050 
-    FLASH_CR=  000002     |     FLASH_CR=  000000     |     FLASH_CR=  000003 
-    FLASH_CR=  000001     |     FLASH_CR=  005051     |     FLASH_CR=  000005 
-    FLASH_CR=  000004     |     FLASH_CR=  000007     |     FLASH_CR=  000000 
-    FLASH_CR=  000006     |     FLASH_DU=  005034     |     FLASH_DU=  0000AE 
-    FLASH_DU=  000056     |     FLASH_EN=  009FFF     |     FLASH_IA=  005054 
-    FLASH_IA=  000003     |     FLASH_IA=  000002     |     FLASH_IA=  000006 
-    FLASH_IA=  000001     |     FLASH_IA=  000000     |     FLASH_PU=  005052 
-    FLASH_PU=  000056     |     FLASH_PU=  0000AE     |     FLASH_SI=  002000 
-    FMSTR   =  000010     |     F_DELAY =  000000     |     F_STATE =  000001 
-    Fmaster =  1E8480     |     GPIO_BAS=  005000     |     GPIO_CR1=  000003 
-    GPIO_CR2=  000004     |     GPIO_DDR=  000002     |     GPIO_IDR=  000001 
-    GPIO_ODR=  000000     |     GPIO_SIZ=  000005     |     I2C_CCRH=  00521C 
-    I2C_CCRH=  000080     |     I2C_CCRH=  0000C0     |     I2C_CCRH=  000080 
-    I2C_CCRH=  000000     |     I2C_CCRH=  000001     |     I2C_CCRH=  000000 
-    I2C_CCRL=  00521B     |     I2C_CCRL=  00001A     |     I2C_CCRL=  000002 
-    I2C_CCRL=  00000D     |     I2C_CCRL=  000050     |     I2C_CCRL=  000090 
-    I2C_CCRL=  0000A0     |     I2C_CR1 =  005210     |     I2C_CR1_=  000006 
-    I2C_CR1_=  000007     |     I2C_CR1_=  000000     |     I2C_CR2 =  005211 
-    I2C_CR2_=  000002     |     I2C_CR2_=  000003     |     I2C_CR2_=  000000 
-    I2C_CR2_=  000001     |     I2C_CR2_=  000007     |     I2C_DR  =  005216 
-    I2C_FAST=  000001     |     I2C_FREQ=  005212     |     I2C_ITR =  00521A 
-    I2C_ITR_=  000002     |     I2C_ITR_=  000000     |     I2C_ITR_=  000001 
-    I2C_OARH=  005214     |     I2C_OARH=  000001     |     I2C_OARH=  000002 
-    I2C_OARH=  000006     |     I2C_OARH=  000007     |     I2C_OARL=  005213 
-    I2C_OARL=  000001     |     I2C_OARL=  000000     |     I2C_OAR_=  000813 
-    I2C_OAR_=  000009     |     I2C_READ=  000001     |     I2C_SR1 =  005217 
-    I2C_SR1_=  000003     |     I2C_SR1_=  000001     |     I2C_SR1_=  000002 
-    I2C_SR1_=  000006     |     I2C_SR1_=  000000     |     I2C_SR1_=  000004 
-    I2C_SR1_=  000007     |     I2C_SR2 =  005218     |     I2C_SR2_=  000002 
-    I2C_SR2_=  000001     |     I2C_SR2_=  000000     |     I2C_SR2_=  000003 
-    I2C_SR2_=  000005     |     I2C_SR3 =  005219     |     I2C_SR3_=  000001 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 26.
+    BTN_BIT =  000001     |     BTN_PIN =  000002     |     BTN_PORT=  00500A 
+    CFG_GCR =  007F60     |     CFG_GCR_=  000001     |     CFG_GCR_=  000000 
+    CLK_CCOR=  0050C5     |     CLK_CKDI=  0050C0     |     CLK_PCKE=  0050C3 
+    CLK_PCKE=  000006     |     CLK_PCKE=  000003     |     CLK_PCKE=  000003 
+    CLK_PCKE=  000004     |     CLK_PCKE=  000000     |     CLK_PCKE=  000001 
+    CLK_PCKE=  000002     |     CLK_PCKE=  000005     |     CLK_PCKE=  000005 
+    COMP_CCS=  005302     |     COMP_CR =  005300     |     COMP_CSR=  005301 
+    CPU_A   =  007F00     |     CPU_CCR =  007F0A     |     CPU_PCE =  007F01 
+    CPU_PCH =  007F02     |     CPU_PCL =  007F03     |     CPU_SPH =  007F08 
+    CPU_SPL =  007F09     |     CPU_XH  =  007F04     |     CPU_XL  =  007F05 
+    CPU_YH  =  007F06     |     CPU_YL  =  007F07     |     DISPLAY_=  000080 
+    DM_BK1RE=  007F90     |     DM_BK1RH=  007F91     |     DM_BK1RL=  007F92 
+    DM_BK2RE=  007F93     |     DM_BK2RH=  007F94     |     DM_BK2RL=  007F95 
+    DM_CR1  =  007F96     |     DM_CR2  =  007F97     |     DM_CSR1 =  007F98 
+    DM_CSR2 =  007F99     |     DM_ENFCT=  007F9A     |     EEPROM_B=  001000 
+    EEPROM_E=  0017FF     |     EEPROM_S=  000800     |     EXTI_CON=  0050A5 
+    EXTI_CR1=  0050A0     |     EXTI_CR2=  0050A1     |     EXTI_CR3=  0050A2 
+    EXTI_SR1=  0050A3     |     EXTI_SR2=  0050A4     |     FLASH_BA=  008000 
+    FLASH_CR=  005050     |     FLASH_CR=  000002     |     FLASH_CR=  000000 
+    FLASH_CR=  000003     |     FLASH_CR=  000001     |     FLASH_CR=  005051 
+    FLASH_CR=  000005     |     FLASH_CR=  000004     |     FLASH_CR=  000007 
+    FLASH_CR=  000000     |     FLASH_CR=  000006     |     FLASH_DU=  005034 
+    FLASH_DU=  0000AE     |     FLASH_DU=  000056     |     FLASH_EN=  009FFF 
+    FLASH_IA=  005054     |     FLASH_IA=  000003     |     FLASH_IA=  000002 
+    FLASH_IA=  000006     |     FLASH_IA=  000001     |     FLASH_IA=  000000 
+    FLASH_PU=  005052     |     FLASH_PU=  000056     |     FLASH_PU=  0000AE 
+    FLASH_SI=  002000     |     FMSTR   =  000010     |     F_DELAY =  000000 
+    F_STATE =  000001     |     Fmaster =  1E8480     |     GPIO_BAS=  005000 
+    GPIO_CR1=  000003     |     GPIO_CR2=  000004     |     GPIO_DDR=  000002 
+    GPIO_IDR=  000001     |     GPIO_ODR=  000000     |     GPIO_SIZ=  000005 
+    I2C_CCRH=  00521C     |     I2C_CCRH=  000080     |     I2C_CCRH=  0000C0 
+    I2C_CCRH=  000080     |     I2C_CCRH=  000000     |     I2C_CCRH=  000001 
+    I2C_CCRH=  000000     |     I2C_CCRL=  00521B     |     I2C_CCRL=  00001A 
+    I2C_CCRL=  000002     |     I2C_CCRL=  00000D     |     I2C_CCRL=  000050 
+    I2C_CCRL=  000090     |     I2C_CCRL=  0000A0     |     I2C_CR1 =  005210 
+    I2C_CR1_=  000006     |     I2C_CR1_=  000007     |     I2C_CR1_=  000000 
+    I2C_CR2 =  005211     |     I2C_CR2_=  000002     |     I2C_CR2_=  000003 
+    I2C_CR2_=  000000     |     I2C_CR2_=  000001     |     I2C_CR2_=  000007 
+    I2C_DR  =  005216     |     I2C_FAST=  000001     |     I2C_FREQ=  005212 
+    I2C_ITR =  00521A     |     I2C_ITR_=  000002     |     I2C_ITR_=  000000 
+    I2C_ITR_=  000001     |     I2C_OARH=  005214     |     I2C_OARH=  000001 
+    I2C_OARH=  000002     |     I2C_OARH=  000006     |     I2C_OARH=  000007 
+    I2C_OARL=  005213     |     I2C_OARL=  000001     |     I2C_OARL=  000000 
+    I2C_OAR_=  000813     |     I2C_OAR_=  000009     |     I2C_READ=  000001 
+    I2C_SR1 =  005217     |     I2C_SR1_=  000003     |     I2C_SR1_=  000001 
+    I2C_SR1_=  000002     |     I2C_SR1_=  000006     |     I2C_SR1_=  000000 
+    I2C_SR1_=  000004     |     I2C_SR1_=  000007     |     I2C_SR2 =  005218 
+    I2C_SR2_=  000002     |     I2C_SR2_=  000001     |     I2C_SR2_=  000000 
+    I2C_SR2_=  000003     |     I2C_SR2_=  000005     |     I2C_SR3 =  005219 
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 27.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
-    I2C_SR3_=  000007     |     I2C_SR3_=  000004     |     I2C_SR3_=  000000 
-    I2C_SR3_=  000002     |     I2C_STD =  000000     |     I2C_TRIS=  00521D 
-    I2C_TRIS=  000005     |     I2C_TRIS=  000005     |     I2C_TRIS=  000005 
-    I2C_TRIS=  000011     |     I2C_TRIS=  000011     |     I2C_TRIS=  000011 
-    I2C_WRIT=  000000     |     INPUT_DI=  000000     |     INPUT_EI=  000001 
-    INPUT_FL=  000000     |     INPUT_PU=  000001     |     INT_AWU =  000004 
-    INT_COMP=  000012     |     INT_EXTI=  000008     |     INT_EXTI=  000009 
-    INT_EXTI=  00000A     |     INT_EXTI=  00000B     |     INT_EXTI=  00000C 
-    INT_EXTI=  00000D     |     INT_EXTI=  00000E     |     INT_EXTI=  00000F 
-    INT_EXTI=  000006     |     INT_EXTI=  000007     |     INT_FLAS=  000001 
-    INT_I2C =  00001D     |     INT_SPI =  00001A     |     INT_TIM2=  000014 
-    INT_TIM2=  000013     |     INT_TIM3=  000016     |     INT_TIM3=  000015 
-    INT_TIM4=  000019     |     INT_USAR=  00001C     |     INT_USAR=  00001B 
-    INT_VECT=  008018     |     INT_VECT=  008050     |     INT_VECT=  008028 
-    INT_VECT=  00802C     |     INT_VECT=  008030     |     INT_VECT=  008034 
-    INT_VECT=  008038     |     INT_VECT=  00803C     |     INT_VECT=  008040 
-    INT_VECT=  008044     |     INT_VECT=  008020     |     INT_VECT=  008024 
-    INT_VECT=  00800C     |     INT_VECT=  00807C     |     INT_VECT=  008000 
-    INT_VECT=  008070     |     INT_VECT=  008058     |     INT_VECT=  008054 
-    INT_VECT=  008060     |     INT_VECT=  00805C     |     INT_VECT=  00806C 
-    INT_VECT=  008004     |     INT_VECT=  008078     |     INT_VECT=  008074 
-    IR_CR   =  0052FF     |     ITC_SPR1=  007F70     |     ITC_SPR2=  007F71 
-    ITC_SPR3=  007F72     |     ITC_SPR4=  007F73     |     ITC_SPR5=  007F74 
-    ITC_SPR6=  007F75     |     ITC_SPR7=  007F76     |     ITC_SPR8=  007F77 
-    ITC_SPR_=  000001     |     ITC_SPR_=  000000     |     ITC_SPR_=  000003 
-    IWDG_KR =  0050E0     |     IWDG_PR =  0050E1     |     IWDG_RLR=  0050E2 
-    MAJOR   =  000001     |     MINOR   =  000000     |   7 NonHandl   000000 R
-    OPTION_B=  004800     |     OPTION_E=  00480C     |     OUTPUT_F=  000001 
-    OUTPUT_O=  000000     |     OUTPUT_P=  000001     |     OUTPUT_S=  000000 
-    PA      =  005000     |     PAGE_SIZ=  000040     |     PA_CR1  =  005003 
-    PA_CR2  =  005004     |     PA_DDR  =  005002     |     PA_IDR  =  005001 
-    PA_ODR  =  005000     |     PB      =  005005     |     PB_CR1  =  005008 
-    PB_CR2  =  005009     |     PB_DDR  =  005007     |     PB_IDR  =  005006 
-    PB_ODR  =  005005     |     PC      =  00500A     |     PC_CR1  =  00500D 
-    PC_CR2  =  00500E     |     PC_DDR  =  00500C     |     PC_IDR  =  00500B 
-    PC_ODR  =  00500A     |     PD      =  00500F     |     PD_CR1  =  005012 
-    PD_CR2  =  005013     |     PD_DDR  =  005011     |     PD_IDR  =  005010 
-    PD_ODR  =  00500F     |     PIN0    =  000000     |     PIN1    =  000001 
-    PIN2    =  000002     |     PIN3    =  000003     |     PIN4    =  000004 
-    PIN5    =  000005     |     PIN6    =  000006     |     PIN7    =  000007 
+    I2C_SR3_=  000001     |     I2C_SR3_=  000007     |     I2C_SR3_=  000004 
+    I2C_SR3_=  000000     |     I2C_SR3_=  000002     |     I2C_STD =  000000 
+    I2C_TRIS=  00521D     |     I2C_TRIS=  000005     |     I2C_TRIS=  000005 
+    I2C_TRIS=  000005     |     I2C_TRIS=  000011     |     I2C_TRIS=  000011 
+    I2C_TRIS=  000011     |     I2C_WRIT=  000000     |     INPUT_DI=  000000 
+    INPUT_EI=  000001     |     INPUT_FL=  000000     |     INPUT_PU=  000001 
+    INT_AWU =  000004     |     INT_COMP=  000012     |     INT_EXTI=  000008 
+    INT_EXTI=  000009     |     INT_EXTI=  00000A     |     INT_EXTI=  00000B 
+    INT_EXTI=  00000C     |     INT_EXTI=  00000D     |     INT_EXTI=  00000E 
+    INT_EXTI=  00000F     |     INT_EXTI=  000006     |     INT_EXTI=  000007 
+    INT_FLAS=  000001     |     INT_I2C =  00001D     |     INT_SPI =  00001A 
+    INT_TIM2=  000014     |     INT_TIM2=  000013     |     INT_TIM3=  000016 
+    INT_TIM3=  000015     |     INT_TIM4=  000019     |     INT_USAR=  00001C 
+    INT_USAR=  00001B     |     INT_VECT=  008018     |     INT_VECT=  008050 
+    INT_VECT=  008028     |     INT_VECT=  00802C     |     INT_VECT=  008030 
+    INT_VECT=  008034     |     INT_VECT=  008038     |     INT_VECT=  00803C 
+    INT_VECT=  008040     |     INT_VECT=  008044     |     INT_VECT=  008020 
+    INT_VECT=  008024     |     INT_VECT=  00800C     |     INT_VECT=  00807C 
+    INT_VECT=  008000     |     INT_VECT=  008070     |     INT_VECT=  008058 
+    INT_VECT=  008054     |     INT_VECT=  008060     |     INT_VECT=  00805C 
+    INT_VECT=  00806C     |     INT_VECT=  008004     |     INT_VECT=  008078 
+    INT_VECT=  008074     |     IR_CR   =  0052FF     |     ITC_SPR1=  007F70 
+    ITC_SPR2=  007F71     |     ITC_SPR3=  007F72     |     ITC_SPR4=  007F73 
+    ITC_SPR5=  007F74     |     ITC_SPR6=  007F75     |     ITC_SPR7=  007F76 
+    ITC_SPR8=  007F77     |     ITC_SPR_=  000001     |     ITC_SPR_=  000000 
+    ITC_SPR_=  000003     |     IWDG_KR =  0050E0     |     IWDG_PR =  0050E1 
+    IWDG_RLR=  0050E2     |     LOW     =  000053     |     MAJOR   =  000001 
+    MINOR   =  000000     |   7 NonHandl   000000 R   |     OPTION_B=  004800 
+    OPTION_E=  00480C     |     OUTPUT_F=  000001     |     OUTPUT_O=  000000 
+    OUTPUT_P=  000001     |     OUTPUT_S=  000000     |     PA      =  005000 
+    PAGE_SIZ=  000040     |     PA_CR1  =  005003     |     PA_CR2  =  005004 
+    PA_DDR  =  005002     |     PA_IDR  =  005001     |     PA_ODR  =  005000 
+    PB      =  005005     |     PB_CR1  =  005008     |     PB_CR2  =  005009 
+    PB_DDR  =  005007     |     PB_IDR  =  005006     |     PB_ODR  =  005005 
+    PC      =  00500A     |     PC_CR1  =  00500D     |     PC_CR2  =  00500E 
+    PC_DDR  =  00500C     |     PC_IDR  =  00500B     |     PC_ODR  =  00500A 
+    PD      =  00500F     |     PD_CR1  =  005012     |     PD_CR2  =  005013 
+    PD_DDR  =  005011     |     PD_IDR  =  005010     |     PD_ODR  =  00500F 
+    PIN0    =  000000     |     PIN1    =  000001     |     PIN2    =  000002 
+    PIN3    =  000003     |     PIN4    =  000004     |     PIN5    =  000005 
+    PIN6    =  000006     |     PIN7    =  000007     |     POV     =  000001 
     RAM_BASE=  000000     |     RAM_END =  0005FF     |     RAM_SIZE=  000600 
     REV     =  000000     |     RST_CR  =  0050B0     |     RST_SR  =  0050B1 
     SFR_BASE=  005000     |     SFR_END =  005457     |     SPI_CR1 =  005200 
@@ -1335,12 +1357,12 @@ Symbol Table
     TIM2_OIS=  005265     |     TIM2_PSC=  00525D     |     TIM2_SMC=  0052E2 
     TIM2_SR1=  005255     |     TIM2_SR2=  005256     |     TIM3_ARR=  00528E 
     TIM3_ARR=  00528F     |     TIM3_BKR=  005294     |     TIM3_CCE=  00528A 
-    TIM3_CCM=  005288     |     TIM3_CCM=  005289     |     TIM3_CCR=  005290 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 27.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
+    TIM3_CCM=  005288     |     TIM3_CCM=  005289     |     TIM3_CCR=  005290 
     TIM3_CCR=  005291     |     TIM3_CCR=  005292     |     TIM3_CCR=  005293 
     TIM3_CNT=  00528B     |     TIM3_CNT=  00528C     |     TIM3_CR1=  005280 
     TIM3_CR2=  005281     |     TIM3_EGR=  005287     |     TIM3_ETR=  005283 
@@ -1392,18 +1414,18 @@ Symbol Table
     USART_SR=  000000     |     USART_SR=  000005     |     USART_SR=  000006 
     USART_SR=  000007     |     WFE_CR1 =  0050A6     |     WFE_CR2 =  0050A7 
     WWDG_CR =  0050D3     |     WWDG_WR =  0050D4     |   7 clock_in   000016 R
-  7 cold_sta   000041 R   |   5 delay_ti   000009 R   |   7 demo       000062 R
+  7 cold_sta   000041 R   |   5 delay_ti   000009 R   |   7 demo       00005E R
   5 flags      00000A GR  |   6 free_ram   000100 R   |   3 free_ram   00057E R
-  7 led_on     00008A R   |   7 leds_off   000079 R   |   7 leds_tab   0000B5 R
-  5 msec       000008 R   |   7 pause      000034 R   |   3 stack_fu   00057E R
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 28.
+  7 led_on     000095 R   |   7 leds_off   000084 R   |   7 leds_tab   0000C0 R
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 29.
 Hexadecimal [24-Bits]
 
 Symbol Table
 
+  5 msec       000008 R   |   7 pause      000034 R   |   3 stack_fu   00057E R
   3 stack_un   0005FE R   |   7 timer4_i   00001B R
 
-ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 29.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods  (STMicroelectronics STM8), page 30.
 Hexadecimal [24-Bits]
 
 Area Table
@@ -1415,5 +1437,5 @@ Area Table
    4 DATA       size      0   flags    8
    5 DATA1      size      3   flags    8
    6 DATA2      size      0   flags    8
-   7 CODE       size     FD   flags    0
+   7 CODE       size    108   flags    0
 

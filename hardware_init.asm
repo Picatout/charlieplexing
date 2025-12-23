@@ -141,7 +141,6 @@ cold_start:
 ;----------------------    
 	call timer4_init ; msec ticks timer 
 	rim ; enable interrupts
-	mov msec, #50 
 	jp demo 
 
 

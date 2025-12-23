@@ -5,6 +5,229 @@
 	(uuid "d080a3dc-54b9-42e6-9eef-70171a0b9100")
 	(paper "A4")
 	(lib_symbols
+		(symbol "Device:Battery"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "BT"
+				(at 2.54 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "Battery"
+				(at 2.54 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 1.524 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 1.524 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Multiple-cell battery"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "batt voltage-source cell"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Battery_0_1"
+				(rectangle
+					(start -2.286 1.778)
+					(end 2.286 1.524)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -2.286 -1.27)
+					(end 2.286 -1.524)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -1.524 1.016)
+					(end 1.524 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -1.524 -2.032)
+					(end 1.524 -2.54)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 1.778) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 0.254)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -0.508) (xy 0 -0.254)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -1.016) (xy 0 -0.762)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 3.048) (xy 1.778 3.048)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 3.556) (xy 1.27 2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Battery_1_1"
+				(pin passive line
+					(at 0 5.08 270)
+					(length 2.54)
+					(name "+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 90)
+					(length 2.54)
+					(name "-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:C"
 			(pin_numbers
 				(hide yes)
@@ -650,6 +873,142 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Switch:SW_SPST"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at 0 3.175 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "SW_SPST"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Single Pole Single Throw (SPST) switch"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "switch lever"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SW_SPST_0_0"
+				(circle
+					(center -2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.524 0.254) (xy 1.524 1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "SW_SPST_1_1"
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:GND"
 			(power)
 			(pin_numbers
@@ -979,6 +1338,12 @@
 		(uuid "e6ce1de3-5d31-4981-b724-07f1b3c32676")
 	)
 	(junction
+		(at 144.78 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "033a4d1d-af86-4cbe-97fe-7a8f5ba2cbcf")
+	)
+	(junction
 		(at 204.47 137.16)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1013,6 +1378,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "26d301c2-55e2-415a-a5a2-a1974e08f934")
+	)
+	(junction
+		(at 184.15 135.89)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2d5af590-8a4e-48cc-b2f0-3704f0200b2c")
 	)
 	(junction
 		(at 219.71 147.32)
@@ -1258,6 +1629,16 @@
 	)
 	(wire
 		(pts
+			(xy 144.78 160.02) (xy 144.78 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f7388d5-2a1e-4bd2-97f9-fc3bc3cc4df6")
+	)
+	(wire
+		(pts
 			(xy 204.47 137.16) (xy 212.09 137.16)
 		)
 		(stroke
@@ -1328,6 +1709,16 @@
 	)
 	(wire
 		(pts
+			(xy 144.78 148.59) (xy 153.67 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6e6efc11-3b32-46c0-bd91-b632709e2d2c")
+	)
+	(wire
+		(pts
 			(xy 224.79 149.86) (xy 201.93 149.86)
 		)
 		(stroke
@@ -1335,16 +1726,6 @@
 			(type default)
 		)
 		(uuid "76d9e537-bdbc-4fb1-bc03-40b0e517b21d")
-	)
-	(wire
-		(pts
-			(xy 149.86 148.59) (xy 153.67 148.59)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "76e41b6e-5465-42bd-b84b-db3a472a37a7")
 	)
 	(wire
 		(pts
@@ -1518,6 +1899,16 @@
 	)
 	(wire
 		(pts
+			(xy 133.35 148.59) (xy 144.78 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b9c1302c-c590-4fde-a7e4-d5396ad50304")
+	)
+	(wire
+		(pts
 			(xy 224.79 151.13) (xy 261.62 151.13)
 		)
 		(stroke
@@ -1666,6 +2057,16 @@
 		)
 		(uuid "f7936955-198b-49cb-a0d3-efb53a94d68c")
 	)
+	(wire
+		(pts
+			(xy 181.61 135.89) (xy 184.15 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fff612f9-36fe-4361-ae4f-fcd52921e44d")
+	)
 	(label "PB6"
 		(at 184.15 146.05 0)
 		(effects
@@ -1728,9 +2129,31 @@
 			)
 		)
 	)
-	(global_label "3.3Vdd"
+	(global_label "3Volt"
 		(shape input)
-		(at 149.86 148.59 180)
+		(at 173.99 135.89 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "571793b1-901a-444a-9691-1452d93c4d2d")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 166.1668 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "3Volt"
+		(shape input)
+		(at 133.35 148.59 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -1740,7 +2163,7 @@
 		)
 		(uuid "ebd32c5c-32fa-44bd-a367-fb29f1a7b065")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 140.4644 148.59 0)
+			(at 125.5268 148.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1979,7 +2402,7 @@
 				)
 			)
 		)
-		(property "Value" "mode"
+		(property "Value" "speed"
 			(at 186.182 133.096 0)
 			(effects
 				(font
@@ -2469,6 +2892,73 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R")
+		(at 177.8 135.89 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7a790f48-7a0c-4de5-8a9f-fe87c826337f")
+		(property "Reference" "R5"
+			(at 177.8 138.176 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10K"
+			(at 177.546 135.89 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 177.8 134.112 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 177.8 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 177.8 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "b79c3495-4e5e-4eb1-8385-05bcddf0262e")
+		)
+		(pin "1"
+			(uuid "bee586ba-06c2-4e25-8f26-1e7f85aea534")
+		)
+		(instances
+			(project ""
+				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:LED")
 		(at 238.76 137.16 0)
 		(unit 1)
@@ -2608,6 +3098,74 @@
 			(project "charliePlexing"
 				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
 					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Switch:SW_SPST")
+		(at 139.7 160.02 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9aa3f8c5-39cc-432e-993b-214af94b448c")
+		(property "Reference" "SW2"
+			(at 139.7 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "power"
+			(at 139.7 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 139.7 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 139.7 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Single Pole Single Throw (SPST) switch"
+			(at 139.7 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "4e4cc301-27f9-4b89-b790-de3a9a29c92d")
+		)
+		(pin "1"
+			(uuid "0f3476cc-93a7-4c51-be86-f7fe9f5b5fb8")
+		)
+		(instances
+			(project ""
+				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
+					(reference "SW2")
 					(unit 1)
 				)
 			)
@@ -2852,6 +3410,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:Battery")
+		(at 134.62 165.1 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d25f0a93-58da-4424-ab3e-57544ecb0428")
+		(property "Reference" "BT1"
+			(at 138.43 163.2584 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2xAA"
+			(at 138.43 165.7984 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 134.62 163.576 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 134.62 163.576 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Multiple-cell battery"
+			(at 134.62 165.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "2b7552b3-ad80-44b8-beb6-3ef64bf75512")
+		)
+		(pin "1"
+			(uuid "5be5b7c0-fa53-4994-b184-cbd3eec1d616")
+		)
+		(instances
+			(project ""
+				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
+					(reference "BT1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:LED")
 		(at 215.9 157.48 0)
 		(unit 1)
@@ -3064,6 +3692,71 @@
 			(project "charliePlexing"
 				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
 					(reference "#PWR03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 134.62 170.18 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e78949a1-0e7c-4447-bba7-0abe690e3599")
+		(property "Reference" "#PWR04"
+			(at 134.62 176.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 137.922 171.704 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 134.62 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 134.62 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 134.62 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "1c9a9bfb-e74d-49c6-b821-9860e56515f2")
+		)
+		(instances
+			(project "charliePlexing"
+				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)

@@ -6,21 +6,38 @@
 
     .include "config.inc"
  
-
+LOW=83 ; low speed scan 
+POV=1  ; Persistance Of Vision speed 
+BTN_PORT=PC 
+BTN_BIT=1 
+;------------------------------------
+; The 12 LEDs are scanned in sequence
+; button up scan at LOW speed 
+; button down scan at fast speed (POV)
+; and because of persistance of vision 
+; appears to be all on at same time.
+;-------------------------------------
 demo:
+1$:
     ld a,#255
-    push a  
-0$:
+    push a
+2$:
+    btjt BTN_PORT+GPIO_IDR,#BTN_BIT,3$
+    mov msec, #POV
+    jra 4$  
+3$: 
+    mov msec,#LOW 
+4$:
     callr leds_off 
     pop a 
     inc a 
     cp a,#12 
-    jreq demo 
+    jreq 1$ 
     push a 
     callr led_on 
     ld a,msec 
     call pause  
-    jra 0$ 
+    jra 2$ 
     ret 
 
 ;--------------------------------
