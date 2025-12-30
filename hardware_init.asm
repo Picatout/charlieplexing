@@ -48,9 +48,9 @@ anim_delay: .blkb 1 ; animation speed delay, multiple of 12 msec
 anim_timer: .blkb 1 ; animation cowntdown timer, mulitple of 12 msec  
 anim_step: .blkb 1 ; animation table step  
 anim_addr: .blkw 1 ; animation table address
+led_set: .blkw 1 ; bits pattern for LEDs control 
 flags:: .blkb 1 ; various boolean flags
 seedx: .blkw 1  ; xorshift 16 seed x  used by RND() function 
-seedy: .blkw 1  ; xorshift 16 seed y  used by RND() function
 
 	.org 0x100
 
@@ -83,21 +83,17 @@ Timer4UpdateHandler:
 	cp a,#12
 	jrmi 1$ 
 	clr a
+4$:
 ; animation control 
 ; check if animation is active 	
 	btjf flags,#F_ANIM,1$
 ; decrement anim_timer
 	dec anim_timer
 	jrne 1$ 
-	bres flags, #F_ANIM  
-1$: ld mx_step, a 
-	clrw x 
-	ld a,anim_step 
-	ld xl,a
-	sllw x  
-	addw x,anim_addr
-	ldw x,(x)
-    ld a, mx_step 
+	bres flags, #F_ANIM 
+1$:
+    ld mx_step, a 
+	ldw x, led_set
 	tnz a 
 	jreq 3$ 
 2$:	srlw x 
@@ -137,6 +133,25 @@ timer4_init:
 	bset TIM4_IER,#TIM4_IER_UIE
 	ret
 
+
+;-------------------------
+; pseudo random number 
+; generator using 
+; Galois Linear Feedback 
+; shift Register. 
+;------------------------
+MASK=0XB4
+lfsr:
+	ldw x,seedx 
+	srlw x
+	ldw seedx,x 
+	jrnc 9$ 
+	ld a, seedx 
+	xor a,#MASK
+	ld seedx,a 
+9$:
+	ret 
+
 ;------------------------
 ; suspend execution 
 ; input:
@@ -175,14 +190,26 @@ cold_start:
     jrne 2$ 
     dec a 
     jrne 1$ 
-;----------------------    
+;-------------------------------    
 	call timer4_init ; msec ticks timer 
 	rim ; enable interrupts
-	ldw x, msec  
-	call set_seed 
-	ldw x,#msec 
-	ldw anim_addr,x 
-jra . 	 
+	ldw x,#0xACE1
+	ldw seedx,x 
+3$:
+	callr lfsr 
+	ld a,xh 
+	and a,#0xF 
+	ld xh,a 
+4$:	
+	ldw led_set,x   
+	ld a,#40 
+	callr pause
+	ldw x, led_set 
+	sllw x 
+	ld a,xh 
+	and a,#0x10
+	jrne 3$ 
+	jra 4$ 
 	jp animation  
 
 
@@ -233,42 +260,42 @@ led_on:
 ; anode bit_mask ->| cathode bit_mask  
 ;---------------------------------------------------
 leds_table:
-; LED 0  PA2 ->| PA0
-.WORD  PA,PA ; anode port, cathode port  
-.BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
-; LED 1  PA2 ->| PB6
-.WORD PA,PB 
-.BYTE (1<<2),(1<<6) ;  
-;LED 2  PA2 ->| PB5
-.WORD PA,PB  
-.BYTE (1<<2),(1<<5) ;  
-; LED 3  PA0 ->| PA2  
+; LED 1  PA0 ->| PA2  
 .WORD PA,PA 
 .BYTE (1<<0),(1<<2) ; 
-; LED 4  PA0 ->| PB6 
+; LED 2  PA0 ->| PB6 
 .WORD PA,PB 
 .BYTE (1<<0),(1<<6) 
-; LED 5  PA0 ->| PB5 
+; LED 3  PA0 ->| PB5 
 .WORD PA,PB 
 .BYTE (1<<0),(1<<5) ; 
-; LED 6   PB6  ->| PA2
+; LED 4   PB6  ->| PA2
 .WORD PB,PA 
 .BYTE (1<<6),(1<<2)
-; LED 7  PB6 ->| PA0 
+; LED 5  PB6 ->| PA0 
 .WORD PB,PA 
 .BYTE (1<<6),(1<<0)
-; LED 8   PB6 ->| PB5 
+; LED 6   PB6 ->| PB5 
 .WORD PB,PB  
 .BYTE (1<<6),(1<<5)
-; LED 9  PB5 ->| PA2 
+; LED 7  PB5 ->| PA2 
 .WORD PB,PA 
 .BYTE (1<<5),(1<<2)
-; LED 10  PB5 ->| PA 0 
+; LED 8  PB5 ->| PA 0 
 .WORD PB,PA  
 .BYTE (1<<5),(1<<0)
-; LED 11   PB5 ->| PB6 
+; LED 9   PB5 ->| PB6 
 .WORD PB,PB 
 .BYTE (1<<5),(1<<6)
+; LED 10  PA2 ->| PA0
+.WORD  PA,PA ; anode port, cathode port  
+.BYTE  (1<<2),(1<<0)  ; anode bit_mask, cathode bit_mask  
+; LED 11  PA2 ->| PB6
+.WORD PA,PB 
+.BYTE (1<<2),(1<<6) ;  
+;LED 12  PA2 ->| PB5
+.WORD PA,PB  
+.BYTE (1<<2),(1<<5) ;  
 
 
 

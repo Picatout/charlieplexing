@@ -27,7 +27,6 @@
 	.include "inc/stm8l001j3.inc"
 	.include "stm8l001j3_vec.asm" 
 	.include "hardware_init.asm"
-	.include "xor32.asm"
 
 
 
