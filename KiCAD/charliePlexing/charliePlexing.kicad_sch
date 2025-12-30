@@ -1327,6 +1327,16 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "version 1, LEDs vertes"
+		(exclude_from_sim no)
+		(at 209.55 189.484 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+		)
+		(uuid "9aa4052b-055c-4b87-bfbc-acf9d4e6d948")
+	)
 	(text "CharliePlexing demo"
 		(exclude_from_sim no)
 		(at 215.646 172.212 0)
@@ -4055,6 +4065,48 @@
 				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
 					(reference "D9")
 					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 180.34 83.82)
+		(size 38.1 22.86)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "c928456f-76b0-40b2-a8cc-af9e403a5ffe")
+		(property "Sheetname" "version_2"
+			(at 180.34 83.1084 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "version_2.kicad_sch"
+			(at 180.34 107.2646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "charliePlexing"
+				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
+					(page "2")
 				)
 			)
 		)
