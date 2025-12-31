@@ -39,18 +39,20 @@ stack_unf: ; stack underflow ; control_stack bottom
 
 ;--------------------------------------
     .area DATA (ABS)
-	.org 8 
+	.org 2 
 ;--------------------------------------	
 
-msec: .blkw 1 ; milliseconds counter  
 mx_step: .blkb 1 ; multiplexer step 
-anim_delay: .blkb 1 ; animation speed delay, multiple of 12 msec 
-anim_timer: .blkb 1 ; animation cowntdown timer, mulitple of 12 msec  
-anim_step: .blkb 1 ; animation table step  
-anim_addr: .blkw 1 ; animation table address
 led_set: .blkw 1 ; bits pattern for LEDs control 
-flags:: .blkb 1 ; various boolean flags
-seedx: .blkw 1  ; xorshift 16 seed x  used by RND() function 
+anim_delay: .blkb 1 ; animation speed delay, multiple of 12 msec 
+pause_timer: .blkb 1 ; pause cowntdown timer, mulitple of 12 msec  
+anim_select: .blkb 1 ; selected animation 
+anim_step: .blkb 1 ; animation table step  
+anim_table:  .blkw 1 ; animation table address
+flags: .blkb 1 ; various boolean flags
+seed: .blkw 1  ; prng seed  used by lfsr() function 
+debounce: .blkb 1; switches debounce counter 
+switches_state: .blkb 1 ; last switches state 
 
 	.org 0x100
 
@@ -72,10 +74,7 @@ NonHandledInterrupt:
 ; interrupt interval is 1 msec 
 ;--------------------------------
 Timer4UpdateHandler:
-	clr TIM4_SR
-	ldw x, msec 
-	incw x 
-	ldw msec, x 
+	clr TIM4_SR ; reset interrupt flag 
 ; multiplexer control 	
 	call leds_off 
 	ld a,mx_step 
@@ -84,14 +83,15 @@ Timer4UpdateHandler:
 	jrmi 1$ 
 	clr a
 4$:
-; animation control 
-; check if animation is active 	
-	btjf flags,#F_ANIM,1$
-; decrement anim_timer
-	dec anim_timer
+; check if pause is active 	
+	btjf flags,#F_PAUSE,1$
+	dec pause_timer
 	jrne 1$ 
-	bres flags, #F_ANIM 
-1$:
+; end of pause
+	bres flags, #F_PAUSE 
+1$: 
+; turn on LED if bit set 
+; shift the corresponding bit in carry 
     ld mx_step, a 
 	ldw x, led_set
 	tnz a 
@@ -99,11 +99,12 @@ Timer4UpdateHandler:
 2$:	srlw x 
 	dec a 
 	jrne 2$
-3$: srLw x 
-	jrnc 9$ 
+3$: srLw x ; now bit is in carry flag 
+	jrnc 9$ ; bit is reset 
+; bit set turn on LED 	
 	ld a,mx_step 
 	call led_on 
-9$:
+9$: callr read_buttons
 	iret 
 
 
@@ -117,7 +118,7 @@ Timer4UpdateHandler:
 ; FMSTR=16Mhz 
 ;----------------------------------------
 clock_init:	
-	clr CLK_CKDIVR 
+	clr CLK_CKDIVR ; pas de division Fmstr=16Mhz 
 	ret
 
 ;---------------------------------
@@ -133,6 +134,28 @@ timer4_init:
 	bset TIM4_IER,#TIM4_IER_UIE
 	ret
 
+;-------------------------
+; read btn1 and btn2 
+; switches 
+;-------------------------
+read_buttons:
+    ld a,PC+GPIO_IDR 
+    and a,#3 
+	xor a,#(1<<BTN1_BIT)|(1<<BTN2_BIT)
+	cp  a,switches_state 
+    jrne 8$
+    inc debounce
+    ld a,#20
+    cp a,debounce 
+    jrpl 9$ 
+	ld a,switches_state 
+	or a,flags 
+    ld flags,a 
+    jra 9$ 
+8$: clr debounce 
+	clr switches_state 
+9$:    
+    ret 
 
 ;-------------------------
 ; pseudo random number 
@@ -142,36 +165,35 @@ timer4_init:
 ;------------------------
 MASK=0XB4
 lfsr:
-	ldw x,seedx 
+	ldw x,seed 
 	srlw x
-	ldw seedx,x 
+	ldw seed,x 
 	jrnc 9$ 
-	ld a, seedx 
+	ld a, seed 
 	xor a,#MASK
-	ld seedx,a 
+	ld seed,a 
 9$:
 	ret 
 
-;------------------------
+;-----------------------------------
 ; suspend execution 
 ; input:
-;   a    pause in multiple of 12 msec  
-;-------------------------
+;   a  pause in multiple of 12 msec  
+;-----------------------------------
 pause:
-	ld anim_timer,a  
-	bset flags,#F_ANIM  
+	ld pause_timer,a  
+	bset flags,#F_PAUSE  
 1$: wfi 	
-	btjt flags,#F_ANIM,1$ 
+	btjt flags,#F_PAUSE,1$ 
 	ret 
 
 
 
 ;-------------------------------------
-;  initialization entry point 
+;  MCU reset entry point 
 ;-------------------------------------
 cold_start:
 ;set stack 
-	ldw y,0 ; for seedy 
 	ldw x,#STACK_EMPTY
 	ldw sp,x
 ; clear all ram 
@@ -191,27 +213,21 @@ cold_start:
     dec a 
     jrne 1$ 
 ;-------------------------------    
-	call timer4_init ; msec ticks timer 
+	call timer4_init ; msec timer 
 	rim ; enable interrupts
-	ldw x,#0xACE1
-	ldw seedx,x 
-3$:
-	callr lfsr 
-	ld a,xh 
-	and a,#0xF 
-	ld xh,a 
-4$:	
-	ldw led_set,x   
-	ld a,#40 
-	callr pause
-	ldw x, led_set 
-	sllw x 
-	ld a,xh 
-	and a,#0x10
-	jrne 3$ 
-	jra 4$ 
+	ldw x,#0xACE1 ; prng initial seed 
+	ldw seed,x 
+TEST=1
+.if TEST 
+3$: 
+	call lfsr 
+	ldw led_set,x 
+	ld a,#83 
+	callr pause 
+	jra 3$
+.else
 	jp animation  
-
+.endif 
 
 ;--------------------------------
 ; all LEDs off 

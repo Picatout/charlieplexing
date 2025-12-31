@@ -14,9 +14,10 @@
 ; master clock frequency in Mhz 
 	FMSTR=16
 ; TIMER 4 delay boolean flag 
-	F_DELAY=0 ; when reset pause exit 
-	F_ANIM=1 ; when set animation step to next stage 
-
+	F_PAUSE=7 ; when set pause in active  
+	F_BTN1=0  ; set when switch 1 is down 
+	F_BTN2=1  ; set when switch 2 is down
+	 
 ; buttons ports 
 	BTN1_PORT = PC
 	BTN1_BIT = 0  ; (pin 7)
