@@ -14,6 +14,7 @@
  RST=3
  SPD=4 
  RND=7 
+ INV_BIT=(1<<15)
 
 ;------------------------------------
 ; The 12 LEDs are scanned in sequence
@@ -48,7 +49,7 @@ animation:
     ldw x,(x)
     ld a,xh 
     swap a 
-    and a,#0xF ; command  
+    and a,#0x7 ; command  
     cp a,#CPY 
     jreq 5$ ; copy_set
     cp a,#INC 
@@ -63,6 +64,10 @@ animation:
     jreq 10$ ;random_set 
     jra 12$ ; bad command ignored 
 5$: ; copy_set
+    tnzw x 
+    jrpl 52$
+    cplw x 
+52$:
     ld a,xh 
     and a,#0xF
     ld xh,a 
@@ -141,6 +146,7 @@ anim_list:
 .word  random  
 .word  double_sweep   
 .word  clockwise 
+.word  butterfly 
 .word  0 
 
 ;--------------------------------------------------
@@ -156,7 +162,7 @@ anim_list:
 ;    5    reserved
 ;    6    reserved  
 ;    7    copy a random value to variable led_set  
-;    8..15   reserved 
+;    if bit 3 of command is set then led_set is inverted
 ;-------------------------------------------------- 
 
 ; random animation
@@ -179,7 +185,17 @@ double_sweep:
 .word  0x1090
 .word  0x1108 
 .word  0x1204 
-.word  0x3402
+.word  0x1402
+.word  0x1801+INV_BIT
+.word  0x1402+INV_BIT 
+.word  0x1204+INV_BIT 
+.word  0x1108+INV_BIT
+.word  0x1090+INV_BIT 
+.word  0x1060+INV_BIT 
+.word  0x1090+INV_BIT
+.word  0x1108+INV_BIT 
+.word  0x1204+INV_BIT 
+.word  0x3402+INV_BIT
 
 ;------------------------
 ; 1 LED running clockwise 
@@ -199,4 +215,14 @@ clockwise:
  .word 0x1400
  .word 0x3800
 
+;---------------------------
+; both side expand and close 
+;---------------------------
+butterfly:
+ .word 0x4010
+ .word 0x1104
+ .word 0x138E
+ .word 0x17DF
+ .word 0x1FFF
+ .word 0x338E
 
