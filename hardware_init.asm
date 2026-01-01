@@ -140,7 +140,7 @@ timer4_init:
 ;-------------------------
 read_buttons:
     ld a,PC+GPIO_IDR 
-    and a,#3 
+    and a,#(1<<BTN1_BIT)|(1<<BTN2_BIT)
 	xor a,#(1<<BTN1_BIT)|(1<<BTN2_BIT)
 	cp  a,switches_state 
     jrne 8$
@@ -148,12 +148,14 @@ read_buttons:
     ld a,#20
     cp a,debounce 
     jrpl 9$ 
+	bres flags,#F_BTN1 
+	bres flags,#F_BTN2 
 	ld a,switches_state 
 	or a,flags 
     ld flags,a 
     jra 9$ 
 8$: clr debounce 
-	clr switches_state 
+	ld switches_state,a
 9$:    
     ret 
 
@@ -217,7 +219,7 @@ cold_start:
 	rim ; enable interrupts
 	ldw x,#0xACE1 ; prng initial seed 
 	ldw seed,x 
-TEST=1
+TEST=0
 .if TEST 
 3$: 
 	call lfsr 

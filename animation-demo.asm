@@ -23,8 +23,11 @@
 ; appears to be all on at same time.
 ;-------------------------------------
 animation:
-    ldw x,#random
+;initialize with first animation 
+    ldw x,#random 
     ldw anim_table,x
+    ld a,(1,x)
+    ld anim_delay,a
 1$:
 ; check for button down 
     btjf flags,#F_BTN1,2$
@@ -35,10 +38,10 @@ animation:
 3$: ; wait button release 
     ld a,#3 
     and a,flags 
-    jrne 3$ 
+    jrne 3$
 4$:     
     clrw x 
-    ld a,anim_select 
+    ld a,anim_step 
     ld xl,a 
     sllw x 
     addw x,anim_table 
@@ -64,7 +67,7 @@ animation:
     and a,#0xF
     ld xh,a 
     ldw led_set,x 
-    jra 1$
+    jra 12$
 6$: ;inc_step
     inc anim_step 
     jra 5$ 
@@ -82,7 +85,6 @@ animation:
 10$: ;random_set
     call lfsr
     ldw led_set,x 
-    jra 1$ 
 12$: ; animation delay 
     ld a,anim_delay 
     call pause 
@@ -94,6 +96,7 @@ animation:
 ; in anim_list  
 ;-----------------------
 next_anim:
+    call leds_off 
     clr led_set ; disable actual animation 
     inc anim_select
     ld a, anim_select
@@ -112,6 +115,7 @@ next_anim:
 ; in anim_list 
 ;--------------------------
 prev_anim:
+    call leds_off 
     clr led_set ; disable actual animation 
     tnz anim_select 
     jreq list_top 
@@ -123,7 +127,7 @@ prev_anim:
     addw x,#anim_list 
     ldw x,(x)
 new_anim:
-    ldw anim_select,x 
+    ldw anim_table,x 
     clr mx_step
     clr anim_step  
 list_top:  
@@ -136,6 +140,7 @@ list_top:
 anim_list: 
 .word  random  
 .word  double_sweep   
+.word  clockwise 
 .word  0 
 
 ;--------------------------------------------------
@@ -157,14 +162,14 @@ anim_list:
 ; random animation
 ; LEDs selected at random  
 random: 
-.word 0x4053
-.word 0x70000
+.word 0x4020
+.word 0x7000
 
 
 ; double sweep animation 
 ; 2 LEDS going in opposite direction
 double_sweep:
-.word 0x4030
+.word 0x4005
 .word  0x1801
 .word  0x1402 
 .word  0x1204 
@@ -176,5 +181,22 @@ double_sweep:
 .word  0x1204 
 .word  0x3402
 
+;------------------------
+; 1 LED running clockwise 
+;------------------------
+clockwise:
+ .word 0x4005
+ .word 0x1001
+ .word 0x1002
+ .word 0x1004
+ .word 0x1008
+ .word 0x1010
+ .word 0x1020
+ .word 0x1040
+ .word 0x1080
+ .word 0x1100
+ .word 0x1200
+ .word 0x1400
+ .word 0x3800
 
 
