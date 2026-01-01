@@ -145,7 +145,8 @@ list_top:
 anim_list: 
 .word  random  
 .word  double_sweep   
-.word  clockwise 
+.word  clockwise
+.word  fill  
 .word  butterfly 
 .word  0 
 
@@ -226,3 +227,22 @@ butterfly:
  .word 0x1FFF
  .word 0x338E
 
+;----------------------------
+; fill
+;----------------------------
+fill:
+ .word 0x4010
+ .word 0x1020
+ .word 0x1070
+ .word 0x10F0
+ .word 0x11F8
+ .word 0x13FC 
+ .word 0x17FE 
+ .word 0x1FFF
+ .word 0x17FE
+ .word 0x13FC 
+ .word 0x11F8
+ .word 0x10F0 
+ .word 0x1070
+ .word 0x1020
+ .word 0x3000
