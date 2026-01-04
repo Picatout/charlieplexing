@@ -1,3 +1,20 @@
+;;
+; Copyright Jacques Deschênes 2025,2026  
+; This file is part of animation-demo.asm  
+;
+;     animation-demo.asm is free software: you can redistribute it and/or modify
+;     it under the terms of the GNU General Public License as published by
+;     the Free Software Foundation, either version 3 of the License, or
+;     (at your option) any later version.
+;
+;     animation-demo.asm is distributed in the hope that it will be useful,
+;     but WITHOUT ANY WARRANTY; without even the implied warranty of
+;     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;     GNU General Public License for more details.
+;
+;     You should have received a copy of the GNU General Public License
+;     along with animation-demo.asm.  If not, see <http://www.gnu.org/licenses/>.
+;;
 
 ;-------------------------
 ; CharliePlexing demo 
@@ -8,13 +25,13 @@
  ;-----------------------
  ; commands constants
  ;-----------------------
- CPY=0
- INC=1
- DEC=2
- RST=3
- SPD=4 
- RND=7 
- INV_BIT=(1<<15)
+ CPY=0  ; copy bit set 
+ INC=1  ; copy bit set and increment anim_step
+ DEC=2  ; copy bit set and decrement anim_step 
+ RST=3  ; reset anim_step to 0 
+ SPD=4  ; set animation delay 
+ RND=7  ; random bit set 
+ INV_BIT=(1<<15) ; invert bit set before copying 
 
 ;------------------------------------
 ; The 12 LEDs are scanned in sequence
@@ -25,7 +42,7 @@
 ;-------------------------------------
 animation:
 ;initialize with first animation 
-    ldw x,#random 
+    ldw x,#swing 
     ldw anim_table,x
     ld a,(1,x)
     ld anim_delay,a
@@ -81,7 +98,7 @@ animation:
     jra 5$ 
 8$: ;reset_step
     clr anim_step 
-    jra 5$
+    jra 1$
 9$: ;set_speed
     ld a,xl 
     ld anim_delay,a 
@@ -142,7 +159,8 @@ list_top:
 ; list of animations 
 ; selected by btn1 & btn2 
 ;------------------------
-anim_list: 
+anim_list:
+.word  swing  
 .word  random  
 .word  double_sweep   
 .word  clockwise
@@ -158,9 +176,9 @@ anim_list:
 ;    0    copy bits 0..11 to variable led_set
 ;    1    copy bits 0..11 to variable led_set and increment anim_step 
 ;    2    copy bits 0..11 to variable led_set and decrement anim_step
-;    3    copy bits 0..11 to variable led_set and reset anim_step 
+;    3    reset animation to step 0 
 ;    4    set pause delay, bits 0..7 -> anim_delay 
-;    5    reserved
+;    5    reserved 
 ;    6    reserved  
 ;    7    copy a random value to variable led_set  
 ;    if bit 3 of command is set then led_set is inverted
@@ -196,7 +214,8 @@ double_sweep:
 .word  0x1090+INV_BIT
 .word  0x1108+INV_BIT 
 .word  0x1204+INV_BIT 
-.word  0x3402+INV_BIT
+.word  0x1402+INV_BIT
+.word  0x3000 ; loop back  
 
 ;------------------------
 ; 1 LED running clockwise 
@@ -214,7 +233,8 @@ clockwise:
  .word 0x1100
  .word 0x1200
  .word 0x1400
- .word 0x3800
+ .word 0x1800
+ .word 0x3000 ; loop back 
 
 ;---------------------------
 ; both side expand and close 
@@ -225,7 +245,8 @@ butterfly:
  .word 0x138E
  .word 0x17DF
  .word 0x1FFF
- .word 0x338E
+ .word 0x138E
+ .word 0x3000  ; loop back 
 
 ;----------------------------
 ; fill
@@ -245,4 +266,54 @@ fill:
  .word 0x10F0 
  .word 0x1070
  .word 0x1020
- .word 0x3000
+ .word 0x1000
+ .word 0x3000 ; loop back 
+
+;----------------------------
+; swing 
+; like a pandulum 
+;---------------------------
+swing:
+ .word 0x4015  
+ .word 0x1001  ; 1
+ .word 0x4010
+ .word 0x1002  ; 2
+ .word 0x4008
+ .word 0x1004  ; 3
+ .word 0x4004
+ .word 0x1008  ; 4 
+ .word 0x4002
+ .word 0x1010  ; 5 
+ .word 0x1020  ; 6
+ .word 0x4004 
+ .word 0x1040  ; 7 
+ .word 0x4008  
+ .word 0x1080  ; 8 
+ .word 0x4010  
+ .word 0x1100  ; 9 
+ .word 0x4015  
+ .word 0x1200  ; 10 
+ .word 0x4015   
+ .word 0x1400  ; 11 
+ .word 0x4015  
+ .word 0x1800  ; 12 
+ .word 0x1400  ; 11 
+ .word 0x4015  
+ .word 0x1200  ;10 
+ .word 0x4010   
+ .word 0x1100  ; 9
+ .word 0x4008   
+ .word 0x1080  ; 8  
+ .word 0x4004  
+ .word 0x1040  ; 7 
+ .word 0x4004  
+ .word 0x1020  ; 6
+ .word 0x4004  
+ .word 0x1010  ; 5
+ .word 0x4008   
+ .word 0x1008  ; 4 
+ .word 0x4010  
+ .word 0x1004  ; 3 
+ .word 0x4015  
+ .word 0x1002  ; 2 
+ .word 0x3000  ; loop back 

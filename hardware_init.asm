@@ -1,5 +1,5 @@
 ;;
-; Copyright Jacques Deschênes 2025  
+; Copyright Jacques Deschênes 2025,2026  
 ; This file is part of CharliePlexing-demo.asm  
 ;
 ;     CharliePlexing-demo.asm is free software: you can redistribute it and/or modify
@@ -142,6 +142,7 @@ read_buttons:
     ld a,PC+GPIO_IDR 
     and a,#(1<<BTN1_BIT)|(1<<BTN2_BIT)
 	xor a,#(1<<BTN1_BIT)|(1<<BTN2_BIT)
+	
 	cp  a,switches_state 
     jrne 8$
     inc debounce
