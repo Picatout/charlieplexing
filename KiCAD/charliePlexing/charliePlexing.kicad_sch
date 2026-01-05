@@ -4111,6 +4111,48 @@
 			)
 		)
 	)
+	(sheet
+		(at 175.26 33.02)
+		(size 33.02 20.32)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "cef31213-89d2-46e8-bebd-b74e6664de20")
+		(property "Sheetname" "ex_2_LED"
+			(at 175.26 32.3084 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "ex_2_led.kicad_sch"
+			(at 175.26 53.9246 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "charliePlexing"
+				(path "/d080a3dc-54b9-42e6-9eef-70171a0b9100"
+					(page "3")
+				)
+			)
+		)
+	)
 	(sheet_instances
 		(path "/"
 			(page "1")

@@ -34,11 +34,7 @@
  INV_BIT=(1<<15) ; invert bit set before copying 
 
 ;------------------------------------
-; The 12 LEDs are scanned in sequence
-; button up scan at LOW speed 
-; button down scan at fast speed (POV)
-; and because of persistance of vision 
-; appears to be all on at same time.
+; animation client for charlieplexr 
 ;-------------------------------------
 animation:
 ;initialize with first animation 
